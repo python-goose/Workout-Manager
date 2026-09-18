@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <base target="_top">
+  </head>
+  <body>
+    <p id="text"></p>
+  </body>
+  <script>
+   /**    
+    * Событие window.onload срабатывает автоматически
+    * Когда вся HTML-структура загрузиться автоматически
+    */
+
+    window.onload = function(){
+
+      // google.script.run — это API Google для асинхронного выхова функции с сервера
+      google.script.run
+      
+      // 1. Указываем фукнцию обработчки для успешного выполнения
+      // Если серверная функцыя выполниться бзе ошибки то ее ответ
+      // return серверной функции будет передар как аргумент для render
+      .withSuccessHandler(render)
+
+      // 2. Указать функцыю обработчика ошибки
+      // Если на стороне сервера возникнет ошибка
+      .withFailureHandler(showError)
+
+      // 3. Какую серверную функцыю вызвать
+      .get_data_from_table()
+    }
+
+
+    function render(data_from_server){
+      document.getElementById('text').textContent = `${data_from_server.name} - ${data_from_server.count}`
+    }
+
+    function showError(error){console.log(`Ошибка при получении данных:${error}`)}
+
+  </script>
+</html>

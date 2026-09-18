@@ -1,0 +1,1369 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <base target="_top">
+    <!-- Подключаем Bootstrap 5 CSS через CDN -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Подключения иконок -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <style>
+      html, body {height: 100%;margin: 0;overflow: hidden; }
+      body {background-color: #f4f5f7;padding: 5px;user-select: none;}
+      #draggable-header {cursor: move;}
+      /* Стили для миниатюры упражнения */
+      .exercise-thumb {width: 25px;height: 25px;object-fit: cover;border-radius: 4px;border: 1px solid #dee2e6;}
+      .progress {position: relative;}
+      /* Общий класс для линий */
+      .progress-line {position: absolute;top: 0;bottom: 0;width: 1px;background-color: #fff;z-index: 3; pointer-events: none;}
+      .thumb { width: 45px; height: 45px; object-fit: cover; border-radius: 4px; border: 1px solid #dee2e6; }
+      .cc-photo{ min-height:320px; max-height: 366px; height:100%; width:100%; object-fit:cover; }
+      .cc-dot{ width:10px; height:10px; border-radius:50%; padding:0; }
+      #ccCard.cc-done{ border-color:#198754; border-width:2px; background:#f4fbf7; }
+      .no-scrollbar {overflow-y: auto;scrollbar-width: none; -ms-overflow-style: none; }
+      .no-scrollbar::-webkit-scrollbar {display: none;}
+      /* Изменения стиля для заголовка таблицы */
+      #tableView .table thead th {font-weight:600;font-size:.9rem;color:#6c757d;border-bottom-width:1px;}
+      /* Изменения стиля для заголовка таблицы для выполненых упражнений */
+      #tableCompletedView .table thead th { font-weight:600; font-size:.8rem; color:#6c757d; border-bottom-width:1px; }
+      /* Тепловая карта активности: строка = месяц, квадрат = день */
+      .heatmap-row { display:flex; align-items:center; gap:8px; margin-bottom:3px; }
+      .heatmap-label { width:36px; flex-shrink:0; font-size:.72rem; line-height:11px; color:#6c757d; }
+      .heatmap-cells { display:flex; gap:3px; flex-wrap:nowrap; overflow-x:auto; }
+      .heatmap-cell { width:11px; height:11px; border-radius:2px; background:#e9ecef; flex-shrink:0; }
+      .heatmap-cell.active { background:#198754; }
+    </style>
+  </head>
+  <body>
+    <!-- <div class="container py-4" style="max-width:1200px;">-->
+    <!-- Контейнер, в которого есть две часки, фиксированная и та что скролиться, что бы таймер и навигация всегда былазафиксированная
+    а вся остальная информация, список тренировок и логи были доступны по скролу колесика -->
+    <div class="d-flex flex-column p-0" style="height:100vh; max-width:1200px; margin:0 auto;">
+
+      <!-- ===== ЗАФИКСИРОВАННАЯ ШАПКА: не сжимается, не скроллится ===== -->
+      <div class="flex-shrink-0 px-3 pt-3">
+
+      <!-- ================= ТАЙМЕР ================= -->
+      <div id="TimeView" class="card shadow-sm mb-2">
+        <div class="card-body text-center">
+          <div class="display-4 fw-bold mt-4 mb-4" id="timer_text">00:00:00</div>
+
+          <div class="progress" style="height: 25px">
+            <div id="line-first" class="progress-line"></div>
+            <div id="line-second" class="progress-line"></div>
+            <div id="my_progress" class="progress-bar progress-bar-striped progress-bar-animated bg-warning" style="width: 0%">0%</div>
+          </div>
+
+          <div class="d-flex justify-content-between small text-secondary mt-1">
+            <span>Подготовка</span>
+            <span>Тренировка</span>
+            <span>Перетренированность</span>
+          </div>
+
+          <div class="btn-group w-100 mt-3" role="group">
+            <button class="btn btn-success" id="start_timer" style="flex:1 1 0;"><i class="bi bi-play-fill"></i> <span id="btnStartLabel">Старт</span></button>
+            <button class="btn btn-warning" id="pause_timer" style="flex:1 1 0;" disabled><i class="bi bi-pause-fill"></i> Пауза</button>
+            <button class="btn btn-danger" id="stop_timer" style="flex:1 1 0;" disabled><i class="bi bi-stop-fill"></i> Финиш</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ================= ПЕРЕКЛЮЧАТЕЛЬ ВИДА ================= -->
+      <div id="WorkoutSwitcherView" class="d-flex justify-content-between align-items-center mb-2 flex-wrap gap-2">
+
+        <div class="d-flex align-items-center gap-3 flex-wrap">
+          <!-- Обработчки события на класс workoutSwitcher, для контроля выбранной тренировки, все что не btn-check игрорируеться-->
+          <div id="workoutSwitcher" class="btn-group" role="group" aria-label="Тренировка">
+            <!-- Заполняеться динамически -->
+            
+          </div>
+          <span class="text-secondary small">Выполнено сетов: <b id="totalSets">0</b></span>
+        </div>
+
+        <div class="btn-group" role="group" aria-label="Вид списка">
+          <input type="radio" class="btn-check" name="viewMode" id="viewTable" checked>
+          <label class="btn btn-outline-secondary btn-sm" for="viewTable"><i class="bi bi-table"></i> Таблица</label>
+
+          <input type="radio" class="btn-check" name="viewMode" id="viewList">
+          <label class="btn btn-outline-secondary btn-sm" for="viewList"><i class="bi bi-list-ul"></i> Список</label>
+
+          <input type="radio" class="btn-check" name="viewMode" id="viewCarousel">
+          <label class="btn btn-outline-secondary btn-sm" for="viewCarousel"><i class="bi bi-images"></i> Карточка</label>
+        </div>
+      </div>
+
+      <!-- ================= ИТОГИ ВЫПОЛНЕНОЙ ТРЕНИРОВКИ ============== -->
+      <div id="cardCompletedView" class="card shadow-sm mb-3 d-none">
+        <div class="card-body">
+          <div class="d-flex align-items-center justify-content-between mb-3">
+            <h5 class="card-title mb-0"><i class="bi bi-clipboard2-check"></i> Итоги тренировки</h5>
+            <span class="badge text-bg-success"><i class="bi bi-check-lg"></i> Завершена</span>
+          </div>
+
+          <div class="row g-0 mb-2">
+            <div class="col text-center">
+              <div class="fs-5 fw-bold" id="cardCompletedStart">18:02:11</div>
+              <div class="small text-secondary">Начало</div>
+            </div>
+            <div class="col-auto border-start"></div>
+            <div class="col text-center">
+              <div class="fs-5 fw-bold" id="cardCompletedEnd">18:41:47</div>
+              <div class="small text-secondary">Конец</div>
+            </div>
+            <div class="col-auto border-start"></div>
+            <div class="col text-center">
+              <div class="fs-5 fw-bold" id="cardCompletedDuration">39:36</div>
+              <div class="small text-secondary">Длительность</div>
+              <div class="small text-success"><i class="bi bi-arrow-up-short"></i>5% к прошлой</div>
+            </div>
+            <div class="col-auto border-start"></div>
+            <div class="col text-center">
+              <div class="fs-5 fw-bold" id="cardCompletedSetsTotal">5</div>
+              <div class="small text-secondary">Сетов</div>
+            </div>
+            <div class="col-auto border-start"></div>
+            <div class="col text-center">
+              <div class="fs-5 fw-bold" id="cardCompletedExTotal">5</div>
+              <div class="small text-secondary">Упражнений</div>
+            </div>
+            <div class="col-auto border-start"></div>
+            <div class="col text-center">
+              <div class="fs-5 fw-bold" id="cardCompletedVolume">2 450 кг</div>
+              <div class="small text-secondary">Поднято веса</div>
+              <div class="small text-danger"><i class="bi bi-arrow-down-short"></i>3% к среднему за месяц</div>
+            </div>
+          </div>
+
+          <hr class="text-secondary opacity-25 mt-2">
+
+          <div class="mb-2">
+            <label class="form-label small fw-semibold mb-1" for="cardCompletedScore">Сложность тренировки</label>
+            <div class="d-flex align-items-center gap-2">
+              <input type="range" class="form-range" id="cardCompletedScore" min="1" max="100" value="1">
+              <span class="badge fs-6 text-bg-success" id="cardCompletedScoreBadge">1</span>
+            </div>
+            <div class="d-flex justify-content-between small text-secondary mt-1">
+              <span>Легко</span>
+              <span>Средне</span>
+              <span>Тяжело</span>
+              <span>Экстрим</span>
+            </div>
+          </div>
+
+          <div class="mb-1">
+            <label class="form-label small fw-semibold mb-1" for="cardCompletedComment">Комментарий</label>
+            <textarea class="form-control form-control-sm" id="cardCompletedComment" rows="2"
+            placeholder="Как прошла тренировка? Самочувствие, что было тяжело...">Тяжело дались последние подходы на жиме, но в целом самочувствие хорошее.</textarea>
+          </div>
+        </div>
+      </div>
+
+      </div> <!-- Конец зафиксированной области -->
+
+      <!-- ===== СКРОЛЛИРУЕМАЯ ОБЛАСТЬ: занимает всё оставшееся место ===== -->
+      <div class="flex-grow-1 no-scrollbar px-3 pb-3">
+
+      <!-- ================= ТАБЛИЦА ================= -->
+      <div id="tableView" class="card shadow-sm" style="min-height:100px;">
+        <div class="table-responsive">
+          <table class="table table-hover align-middle mb-0">
+            <thead class="table-light">
+              <tr>
+                <th style="width:64px;">Фото</th>
+                <th>Упражнение</th>
+                <th style="width:100px;">Повторения</th>
+                <th style="width:90px;">Вес, кг</th>
+                <th style="width:70px;">Время</th>
+                <th style="width:170px;">Сеты</th>
+              </tr>
+            </thead>
+            <!-- Содержимое tbody целиком генерируется функцией renderTable() -->
+            <tbody id="tableBody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- ================= СПИСОК ================= -->
+      <div id="listView" class="list-group shadow-sm d-none"></div>
+
+      <!-- ================= КАРТОЧКА / КАРУСЕЛЬ ================= -->
+      <div id="carouselView" class="d-none">
+        <div class="card shadow-sm" id="ccCard">
+          <div class="row g-0">
+            <div class="col-12 col-md-5 position-relative">
+              <img id="ccPhoto" src="" alt="" class="cc-photo rounded-start">
+              <span class="badge text-bg-success position-absolute top-0 start-0 m-2 d-none" id="ccDoneBadge">
+                <i class="bi bi-check-lg"></i> Выполнено
+              </span>
+            </div>
+            <div class="col-12 col-md-7">
+              <div class="card-body d-flex flex-column h-100">
+                <div>
+                  <span class="badge text-bg-secondary mb-2" id="ccCounter">1 / 1</span>
+                  <h5 class="card-title" id="ccName"></h5>
+                  <p class="text-secondary small mb-3" id="ccMeta"></p>
+                  <!-- ccFieldsWrapForEvent будет подвязано событие на изменения полей ввода -->
+                  <div id="ccFieldsWrapForEvent" class="d-flex gap-3 mb-3 flex-wrap">
+                    <div id="ccFieldsWrapReps" class="input-group input-group-sm" style="width:130px;">
+                      <!-- <input type="number" min="0" class="form-control form-control-sm" id="ccReps" name="reps"> -->
+                    </div>
+                    <div id="ccFieldsWrapWeight" class="input-group input-group-sm" style="width:120px;">
+                      <!--  <input type="number" min="0" class="form-control form-control-sm" id="ccWeight" name="weight">  -->
+                    </div>
+                  </div>
+                </div>
+                <div class="mt-auto">
+                  <!-- Кнопки +1 / -1 сет для карточки. Перерисовываются в renderCard(),т.к. номер упражнения (data-id) в карточке каждый раз разный -->
+                  <div class="mb-3" id="ccStepperWrap"></div>
+                  <div class="d-flex justify-content-between align-items-center">
+                    <button class="btn btn-outline-secondary btn-sm" id="ccPrev"><i class="bi bi-chevron-left"></i> Пред.</button>
+                    <div class="d-flex gap-1" id="ccDots"></div>
+                    <button class="btn btn-outline-secondary btn-sm" id="ccNext">След. <i class="bi bi-chevron-right"></i></button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <p class="text-center text-secondary small mt-2">Нажми «+1 сет» — данные сразу сохранятся в таблицу execution.</p>
+      </div>
+
+      <!-- ============ АКТИВНОСТЬ ЗА ПОЛГОДА + СЕРИЯ ПОДРЯД ============ -->
+      <!-- #activityHeatmap заполняется скриптом ниже (месяц = строка, зелёный квадрат = была тренировка) -->
+      <div id="activityHeatmapView" class="row g-3 mb-3 d-none">
+        <div class="col-12 col-lg-8">
+          <div class="card shadow-sm h-100">
+            <div class="card-body d-flex align-items-center">
+              <div class="d-flex align-items-center w-100">
+                <div id="activityHeatmap"></div>
+                <div class="flex-grow-1 d-flex flex-column align-items-center justify-content-center text-center">
+                  <div class="display-6 fw-bold"><i class="bi bi-calendar3 text-primary"></i> <span id="activityTotalCount">0</span></div>
+                  <div class="small text-secondary">тренировок за полгода</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="col-12 col-lg-4">
+          <div class="card shadow-sm h-100">
+            <div class="card-body d-flex flex-column justify-content-center text-center">
+              <div class="display-6 fw-bold"><i class="bi bi-fire text-danger"></i> 7</div>
+              <div class="text-secondary small mb-1">дней подряд</div>
+              <div class="small text-secondary">Рекорд серии: 14 дней</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ================= ВЫПОЛНЕНЫЕ УПРАЖНЕНИЯ ================= -->
+      <div id="tableCompletedView" class="card shadow-sm mb-3 d-none">
+        <div class="table-responsive">
+          <table class="table table-hover align-middle mb-0">
+            <thead class="table-light">
+              <tr>
+                <th style="width:56px;">Фото</th>
+                <th>Упражнение</th>
+                <th style="width:90px;" class="text-center">Время</th>
+                <th style="width:90px;" class="text-center">Повторы</th>
+                <th style="width:80px;" class="text-center">Вес, кг</th>
+                <th style="width:70px;" class="text-center">Сек/сет</th>
+                <th style="width:90px;">Сложность</th>
+                <th style="width:220px;">Комментарий</th>
+              </tr>
+            </thead>
+            <tbody id="tableCompletedBody">
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- ================= КНОПКИ, ЗАВЕРШЕНИЯ ТРЕНИРОВКИ ================= -->
+      <div id="BtnCompletedView" class="d-flex justify-content-end gap-2 mb-4 d-none">
+        <!-- <button class="btn btn-outline-secondary" id="aiAnalysisBtn"><i class="bi bi-stars"></i> AI анализ</button>-->
+        <button class="btn btn-primary" id="saveWorkoutBtn"><i class="bi bi-cloud-arrow-up"></i> Сохранить тренировку</button>
+      </div>
+
+       <!-- ================= ДЕБАГ ПАНЕЛЬ ================= -->
+      <div id="loadStatus" class="text-left text-secondary small mt-3 card shadow-sm mb-3 p-2 " style="min-height:30px;"></div>
+
+
+      </div> <!-- Конец скролируемой области -->
+    </div> <!-- Конец контейнера, для скролируемой и фиксированной области -->
+    <!--</div>-->  <!-- Старый контейнер -->
+
+
+    
+  </body>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</html>
+
+<script>
+
+class Exercise {
+  /**
+  * @param {Object} data - сырые данные одного упражнения
+  * @param {number} data.id - айдишник упражнения, в рамках тренировки
+  * @param {string} data.name - название упражнения
+  * @param {number} data.reps - количество повторений по умолчанию
+  * @param {number} data.weight - рабочий вес, кг
+  * @param {number} data.time - время выполнения упражнения (для reps)
+  * @param {string} data.photo_small - фото маленького размера для списка и таблицы (44pxх44px)
+  * @param {string} data.photo_large - фото среднего размера, для карточки
+  */
+  constructor({id, name, reps, weight, time, photo_small, photo_large}){
+    this.id = id
+    this.name = name || "Название не указано";
+    this.reps = Number(reps) || 0;
+    this.weight = Number(weight) || 0;
+    this.time = Number(time) || 0;
+    this.photoSmall = photo_small || "https://placehold.co/45x45?text=0";
+    this.photoLarge = photo_large || "https://placehold.co/485x365?text=0";
+    
+    // Сколько подходов выполнено, отмечаеться пользователем
+    this.sets = 0; 
+  }
+  
+}
+
+class Workout{
+  /** workouts = {name, exercises:[{},{}]}*/
+  constructor({name, id, archived, exercises}){
+    // Список упражнений
+    this.exercises = [];
+
+    // Название тренировки
+    this.name = name;
+
+    // id тренировки (string)
+    this.id = id
+
+    // Являеться ли тренировка хаархивированной
+    this.archived = archived;
+
+    for(let i = 0; i < exercises.length; i ++){
+      this.exercises.push(new Exercise(exercises[i]))
+    }
+  }
+
+  // Получить упражнения по id упражнения
+  getExerciseById(id){
+    for(let i = 0; i < this.exercises.length; i++){
+      if(this.exercises[i].id === id) return this.exercises[i]
+    }
+  }
+
+  // Получить порядковый номер упражнения по id упражнения
+  // Для логику, "След" и "Пред" упражнения
+  getElementPositionById(id){
+    for(let i = 0; i < this.exercises.length; i++){
+      if(this.exercises[i].id === id) return i
+    }
+  }
+
+}
+
+// Выполненое упражнения
+class CompletedExercise extends Exercise {
+  /**
+   * @param {Exercise} exercise - Экземпляр базового упражнения
+   */
+  constructor(exercise) {
+    // Обязательный вызов пустого super(), чтобы инициализировать класс-родитель
+    super({}); 
+
+    // Копируем абсолютно все свойства из переданного экземпляра Exercise
+    // Нужно сделать снимок упражнения, без ссылки на упражнения
+    Object.assign(this, exercise);
+
+    // Коментарий упражнения
+    this.comment = '';
+
+    // Дата и время выполнения упражнения
+    this.dateEnd = new Date();
+
+    // Идея: оцените сложность упражнения от 1 до 100\
+    this.complexityAssessment = 1;
+  }
+
+  // Установить сложность упражнения
+  setComplexityAssessment(value){
+    this.complexityAssessment = value;
+  }
+
+  // Установить комментрий упражнения
+  setComment(value){
+    this.comment = value;
+  }
+
+}
+
+// Выполненая тренировка
+class CompletedWorkout{
+  constructor(){
+    // Дата и время старта тренировки, когда нажымаем кнопку старт
+    this.dateStart = null;
+    // Дата и время завершения тренировки
+    this.dateEnd = null;
+    // Продолджытельность тренировки
+    this.duration = null;
+    // Количество выполненных сетов
+    this.countSet = 0;
+    // Количество уникальных упражнений
+    this.countUniqueExercises = 0;
+    // Количество поднятого веса
+    this.totalWeightLifted = 0;
+    // Список выполненых упражнений, екземпляры CompletedExercise
+    this.exercise = [];
+    // Оцените сложность тренировки в целом
+     this.complexityAssessment = 20;
+    // Комментарий к тренировке
+    this.comment;
+  }
+
+  // Установить время начала тренировки один раз
+  setDateStart(){
+    if(this.dateStart === null) this.dateStart = new Date();
+  }
+
+  // Установить конец тренировки один раз
+  setDateEnd(){
+    if(this.dateEnd === null) this.dateEnd = new Date();
+  }
+
+  // Расчитать продолжтельность тренировки
+  setDuration(){
+    // Расчитать продолжительность тренировки (в миллисекундах)
+    this.duration = this.dateEnd - this.dateStart; // число, не Date
+
+  }
+
+  // Расчиатть количество выполненных сетов
+  calculateSetCount(){
+    // Она запись, это один сет
+    this.countSet = this.exercise.length
+  }
+
+  // Количество уникальных упражнений
+  calculateCountUniqueExercises(){
+    let uniq = []
+    for(let i = 0; i < this.exercise.length; i++){
+      if(!uniq.includes(this.exercise[i].id)){
+        uniq.push(this.exercise[i].id)
+      }
+    }
+    this.countUniqueExercises = uniq.length;
+  }
+
+  // Количество поднятого веса
+  calculateTotalWeightLifted(){
+    for(let i = 0; i < this.exercise.length; i++){
+      this.totalWeightLifted += this.exercise[i].reps * this.exercise[i].weight
+    }
+  }
+
+  
+  // Добавить выполненное упражнения
+  addExercise(exercise){
+    this.exercise.push(new CompletedExercise(exercise))
+  }
+
+  // Удалить выполненое упражнения
+  delExerciseById(id){
+    // Делаем поиск с конца, находим упражнения по id упражнения и удалем его со списка
+    for(let i = this.exercise.length - 1; i >= 0; i--){
+      if(id === this.exercise[i].id){
+        // Удалить елемент со списка по индексу, 1 раз
+        this.exercise.splice(i, 1);
+        break;
+      }
+    }
+  }
+
+  // Установить общюю сложность тренировки
+  setComplexityAssessment(value){
+    this.complexityAssessment = value
+  }
+
+  // Установить комментрий к тренировке
+  setComment(value){
+    this.comment = value;
+  }
+
+  // Найти выполненное упражнения по айдишнику упражнения
+  /*
+  getExerciseById(id){
+    for(let i = 0; i < this.exercise.length; i++){
+      if(id === this.exercise[i].id){
+        return this.exercise[i].id
+      }
+    }
+  }*/
+
+  // Расчитать все показатели по завершению тренировки
+  calculateTotal(){
+    this.setDateEnd();
+    this.setDuration();
+    this.calculateSetCount();
+    this.calculateCountUniqueExercises();
+    this.calculateTotalWeightLifted();
+  }
+}
+
+class WorkoutSession {
+  /** workouts = [{name, exercises}{}] */
+  constructor(workouts){
+    // Список тренировок
+    this.workouts = [];
+
+    // Текущий отображаемый вид: 'table' | 'list' | 'carousel'
+    this.view = "table"
+
+    for(let i = 0; i < workouts.length; i++){
+      this.workouts.push(new Workout(workouts[i]))
+    }
+
+    // Текущая активная тренировка
+    this.activeWorkout = this.workouts[0]
+
+    // Айдишник текущего активного упражнения
+    this.activeExerciseId = this.activeWorkout.exercises[0].id
+
+    // Выполнено сетов всего
+    this.totalSets = 0
+
+    // ЛОгирования выполненных действий, тренировки и упражнений
+    this.completedWorkout = new CompletedWorkout();
+
+    // Текущий отображаемый вид страницы: 'main' | 'end' 
+    this.pageWiew = 'main';
+  }
+
+  /**
+   * Переключает активную тренировку по названию.
+   * @param {string} id - название тренировки для поиска
+   */
+  setActiveWorkoutByid(id){
+    for(let i = 0; i < this.workouts.length; i++){
+      if(this.workouts[i].id === id){
+        this.activeWorkout = this.workouts[i];
+        // id активного упражнения первый из списка
+        this.activeExerciseId = this.activeWorkout.exercises[0].id
+        return;
+      }
+    }
+    console.warn(`Тренировка "${id}" не найдена в сессии (id)`);
+  }
+
+  // Установить новое значения для отображения списка тренировок
+  setView(name){
+    this.view = name
+  }
+
+  // Сместить айдишник активного упражнения на следующий
+  setPrevIdExercise(){
+    // Список текущий активных упражнений
+    let list = this.activeWorkout.exercises
+    // Позицыя текущего активного упражнения
+    let position = this.activeWorkout.getElementPositionById(this.activeExerciseId)
+    // Позицыю смещаем на 1 в низ
+    position = position - 1;
+    // Если переступили границу, от берем порядковый номер последнего упражнения
+    if(position < 0 ) position = list.length - 1
+    // Обновляем айдишник активного упражнения
+    this.activeExerciseId = list[position].id;
+  }
+
+  // Сместить айдишник активного упражнения на предыдущий
+  setNextIdExercise(){
+    // Список тукущих активных упражнений
+    const list = this.activeWorkout.exercises;
+    // Позицыя текущего активного упражнения
+    let position = this.activeWorkout.getElementPositionById(this.activeExerciseId);
+    // Евеличивыем позицыю на 1
+    position = position + 1;
+    // Если вышли за пределы, то берем позицыю 0
+    if(position >= list.length){ position = 0; }
+    // Обновляем айдишник активного упражнения
+    this.activeExerciseId = list[position].id;
+  }
+
+
+  // Найти упражнения по id и установить новое значения "Повторений"
+  setReps(exerciseId, value){
+    for(let i = 0; i < this.activeWorkout.exercises.length; i++){
+      if(this.activeWorkout.exercises[i].id === exerciseId){
+        this.activeWorkout.exercises[i].reps = value;
+        return;
+      }
+    }
+  }
+
+  // Найти упражнения по id и установить новое значения "Вес"
+  setWeight(exerciseId, value){
+    for(let i = 0; i < this.activeWorkout.exercises.length; i++){
+      if(this.activeWorkout.exercises[i].id === exerciseId){
+        this.activeWorkout.exercises[i].weight = value;
+        return;
+      }
+    }
+  }
+
+  // Увеличение или уменьшение количество сетов
+  changeSets(exerciseId, delta){
+    for(let i = 0; i < this.activeWorkout.exercises.length; i++){
+      if(this.activeWorkout.exercises[i].id === exerciseId){
+        // Что бы количество сетов не ушли в минус
+        if(this.activeWorkout.exercises[i].sets === 0 && delta === -1) return;
+        this.totalSets += delta;
+        // Если сетов было 0, тогда переходим на слуюущее упражнения
+        // Ситуация когда одно упражнения выполнено 3 раза и айдишик упражнения будет +3
+        if(this.activeWorkout.exercises[i].sets === 0 && delta === 1) this.setNextIdExercise();
+        // Увеличиваем или умешьшаем сеты
+        this.activeWorkout.exercises[i].sets += delta;
+
+        //Сохранить или удалить запись с логирования
+        if(delta === 1){
+          this.completedWorkout.addExercise(this.activeWorkout.exercises[i])
+        }else{
+          this.completedWorkout.delExerciseById(exerciseId)
+        }
+        return;
+      }
+    }
+  }
+
+}
+
+
+
+class Timer{
+  /**
+   * @param {number} prepSeconds  - время подготовки, сек
+   * @param {number} trainSeconds - время тренировки, сек
+   * @param {float} overtimeFactor - процент учеличения
+   */
+  constructor(prepSeconds, trainSeconds, overtimeFactor){
+    this.prepSeconds = prepSeconds;
+    this.trainSeconds = trainSeconds;
+    this.overtimeFactor = overtimeFactor;
+    this.totalSeconds = Math.ceil(prepSeconds + trainSeconds + (trainSeconds * overtimeFactor));
+
+    // Текущее время
+    this.currentSeconds = 0;
+    //  хендл setInterval, null = таймер не запущен
+    this.intervalId = null;
+    // callback, который вызывается каждую секунду — сюда мы подключим отрисовку
+    this.onTick = null;
+  }
+
+  isRunning(){
+    return this.intervalId !== null;
+  }
+
+  /** Текущая стадия: 'prep' | 'train' | 'overtrain' */
+  getPhase(){
+    // Больше или равно, и тогда после пересецения линии будет новый цвет
+    if(this.currentSeconds <= this.prepSeconds) return "prep";
+    if(this.currentSeconds <= this.prepSeconds + this.trainSeconds) return "train";
+    return "overtrain"
+  }
+
+  /** Прогресс в процентах для полосы загрузки */
+  getPercent(){
+    return Math.min(100, (this.currentSeconds / this.totalSeconds) * 100).toFixed(2);
+  }
+
+  start(){
+    if(this.isRunning()) return; // Если уже работает то ничего не делать
+    this.intervalId = setInterval(() => {
+      this.currentSeconds += 1;
+      // ===== Паттерн колбэка (callback), 3 шага =====
+      // 1. Свойство-"розетка" под функцию. Пока null — снаружи её ещё не подключили.
+      // 2. Кто-то снаружи присваивает сюда свою функцию: instance.onTick = function(t){...}
+      // 3. Внутри класса зовём эту функцию и передаём ей "this" — ссылку на ТЕКУЩИЙ
+      // экземпляр, чтобы колбэк знал, чьи это данные (важно, если экземпляров
+      // несколько и у всех один и тот же колбэк).
+      // Понять проще, если вместо this передаем какое то значение
+      if (this.onTick) this.onTick(this); // сообщаем "наружу", что секунда прошла
+      
+    }, 1000)
+  }
+
+  pause(){
+    clearInterval(this.intervalId);
+    this.intervalId = null;
+  }
+
+  stop(){
+    this.pause()
+    this.currentSeconds = 0;
+  }
+
+  static formatTime(totalSeconds){
+    let h = String(Math.floor(totalSeconds / 3600)).padStart(2, '0');
+    let m = String(Math.floor((totalSeconds % 3600) / 60)).padStart(2, '0');
+    let s = String(totalSeconds % 60).padStart(2, '0');
+    return `${h}:${m}:${s}`; 
+  }
+}
+
+
+let session = null;
+let timer = null;
+
+
+// Загрузить данные при открытии модального окна
+window.onload = function(){
+  google.script.run
+    .withSuccessHandler(on_data_loader)
+    .withFailureHandler(on_data_error)
+    .get_data_from_server()
+}
+
+// Точка запуска приложения
+function on_data_loader(workouts){
+  // Создание сесси тренировки
+  session = new WorkoutSession(workouts);
+  // Создание таймера
+  timer = new Timer(20, 900, 0.2);
+  // Повешать отработчки (каждая секунжа)
+  timer.onTick = callbackOnTick;
+  // Рендер всех компонентов
+  render()
+
+}
+
+function on_data_error(err){
+  document.getElementById("loadStatus").textContent = 'Не получилось загрузить упражнения' + err.message;
+}
+
+// Обновления времени и прогрес бара каждую секунду
+function callbackOnTick(t){
+  let bar = document.getElementById('my_progress');
+  let card = document.getElementById('TimeView');
+
+  // Задать новое значение шкалы прогрес бара
+  bar.style.width = t.getPercent() + "%";
+  bar.textContent = t.getPercent() + "%";
+
+  // Обновить таймер на клиенте
+  document.getElementById("timer_text").textContent = Timer.formatTime(t.currentSeconds);
+
+  // Очистить классы бара и обводку карточки
+  card.classList.remove('border-warning', 'border-success', 'border-danger', 'border-2', 'border-opacity-50');
+  bar.classList.remove('bg-warning', 'bg-success', 'bg-danger');
+
+  // Получить текущее состояние тренировки (этап) 'prep' | 'train' | 'overtrain'
+  let phase = t.getPhase();
+
+  // В зависимости от состояние тренировки, становить задний фон прогрес бара и обводку карточки
+  if(phase === 'prep'){
+    bar.classList.add("bg-warning");
+    card.classList.add('border-warning', 'border-2', 'border-opacity-50')
+  }else if (phase === 'train'){
+    bar.classList.add("bg-success");
+    card.classList.add('border-success', 'border-2', 'border-opacity-50')
+  }else{
+    bar.classList.add("bg-danger");
+    card.classList.add('border-danger', 'border-2', 'border-opacity-50')
+  }
+}
+
+
+/* Создания дерева обьектов класса */
+function bildTree(value, label){
+  // Для определенных переменных будет подсказка в названии (summary)
+  let helper = "";
+  if(label === "workouts"){helper = "Список тренировок"}
+  if(label === "exercises"){helper = "Список упражнений"}
+
+  // ====== Базовый случай, когда завершения рекурсии ======
+
+  // Если елемент это число 🛑
+  if(typeof value === "number"){
+    let leaf = document.createElement("div");
+    leaf.textContent = `${label}: ${value}`;
+    return leaf
+  }
+
+  // Есди переменная пустая
+  if(value === null){
+    let leaf = document.createElement("div");
+    leaf.textContent = `${label}: ${value}`;
+    return leaf
+  }
+
+  // Если переменная строка
+  if(typeof value === "string"){
+    let leaf = document.createElement("div");
+    leaf.textContent = `${label}: ${value}`;
+    return leaf
+  }
+
+  // Если переменная логическое выражение
+  if(typeof value === "boolean"){
+    let leaf = document.createElement("div");
+    leaf.textContent = `${label}: ${value}`;
+    return leaf
+  }
+
+  // ====== Рекурсивный случай, когда передаем уменьшенные данные ======
+  // Или объект (ключи) или список (елементы)
+  
+  // Создание тегра details (свертываемый елемент) а summary это его заголовок
+  let node = document.createElement("details");
+  //node.open = true;
+  let summary = document.createElement("summary")
+
+  // Переменная список ? (true, false)
+  let isArray = Array.isArray(value)
+  let keys = null
+
+  // Подпись, summary меняеться в зависимости (списка или обьекта)
+  if(isArray){
+    summary.textContent = `${label}: [${value.length}], ${helper}`;
+    // Спиок индексов [0, 1, 2, ...]
+    keys = value.map((_, i) => i) // 
+  }else{
+    summary.textContent = `${label}: {...}`;
+    // Список ключей ["name", "exercises"...]
+    keys = Object.keys(value) 
+  }
+
+  // Добавить summary в details (заголовок)
+  node.appendChild(summary)
+
+  for(let i = 0; i < keys.length; i++){
+    let key = keys[i];
+    let child = bildTree(value[key], String(key))
+    child.style.marginLeft = "16px"
+    node.appendChild(child)
+  }
+
+  return node;
+}
+
+
+// Отрисовать дерево обьектов
+function renderTree(){
+  let tree = bildTree(session, "session");
+  let loadStatus = document.getElementById("loadStatus");
+  loadStatus.innerHTML = "";
+  loadStatus.appendChild(tree);
+}
+
+
+// Две линии на шкале прогрес бара
+function renderBarLine(){
+  // Процентная шкала, делиться на 3 части, нарисовать две линии
+  const stepPercent = 100 / timer.totalSeconds;
+  document.getElementById('line-first').style.left = (stepPercent * timer.prepSeconds) + '%';
+  document.getElementById('line-second').style.left = (stepPercent * (timer.prepSeconds + timer.trainSeconds)) + '%';
+}
+
+function renderSetCount(){
+  document.getElementById("totalSets").textContent = session.totalSets;
+}
+
+
+// Переключатель тренировки
+function renderWorkoutSwitcher(id){
+  let html = ``
+  for(let i = 0; i < session.workouts.length; i++){
+    // если тренировка заархивированная пропустить ее
+    if(session.workouts[i].archived){continue;}
+    let id = session.workouts[i].id
+    let name = session.workouts[i].name
+    let checked = session.activeWorkout.id === id ? "checked": ""
+    html += `<input id="WorkoutSwitcher-${id}" type="radio" class="btn-check" name="workoutMode" ${checked} data-workout-id="${id}">
+    <label class="btn btn-outline-primary btn-sm" for="WorkoutSwitcher-${id}">${name}</label>`
+  }
+  document.getElementById('workoutSwitcher').innerHTML = html
+}
+
+/**
+ * Поле ввода числа, для повторений, веса и времени
+ * @param {string} name - "reps" или "weight"
+ * @param {number} id - id упражнения
+ * @param {number} value - текущее значение
+ * Через поле name определяеться измеенния, веса, повторений или времени
+ */
+function renderInputNumber(name, id, value){
+  return `<input type="number" min="0" class="form-control form-control-sm" name="${name}" data-id="${id}" value="${value}">`
+}
+
+/**
+ * Степпер сетов "-1 / N / +1" — одинаковый для таблицы, списка и карточки.
+ * @param {number} id - id упражнения
+ * @param {number} sets - текущее количество выполненных сетов
+ * button[data-action] = plus, определяеться увеличения или уменьшения сетов
+ */
+function renderStepperControl(id, sets){
+  return `
+  <div class="btn-group btn-group-sm" role="group">
+    <button class="btn btn-outline-secondary" data-action="minus" data-id="${id}" title="Отменить последний сет"><i class="bi bi-dash"></i>1</button>
+    <span class="btn btn-outline-secondary disabled fw-bold">${sets}</span>
+    <button class="btn btn-success" data-action="plus" data-id="${id}" title="Записать сет"><i class="bi bi-plus"></i>1</button>
+  </div>`;
+
+}
+
+// Таблица: заполнения упражнениями
+function renderTable() {
+  let html = '';
+  for (let i = 0; i < session.activeWorkout.exercises.length; i++) {
+    const ex = session.activeWorkout.exercises[i];
+    html += `
+      <tr class="${ex.sets > 0 ? 'table-success' : ''}">
+        <td><img src="${ex.photoSmall}" class="thumb rounded flex-shrink-0" alt="${ex.name}"></td>
+        <td>
+          <div class="fw-semibold">${ex.name}</div>
+          <div class="text-secondary small">${ex.time} сек / подход</div>
+        </td>
+        <td>${renderInputNumber("reps", ex.id, ex.reps)}</td>
+        <td>${renderInputNumber("weight", ex.id, ex.weight)}</td>
+        <td class="text-secondary">${ex.time}с</td>
+        <td>${renderStepperControl(ex.id, ex.sets)}</td>
+      </tr>`;
+  }
+  document.getElementById('tableBody').innerHTML = html;
+}
+
+// Таблица: заполнения упражнениями
+function renderCompletedTable() {
+  let html = '';
+  for (let i = 0; i < session.completedWorkout.exercise.length; i++) {
+    const ex = session.completedWorkout.exercise[i];
+    let option = ''
+    for(let j = 1; j <=10; j++){
+      let selected = ''
+      if(ex.complexityAssessment === j) selected = "selected"
+      option += `<option value="${j}" ${selected}>${j}</option>`
+    }
+    html += `
+      <tr>
+        <td><img src="${ex.photoSmall}" class="thumb rounded flex-shrink-0" alt="${ex.name}"></td>
+        <td><div class="fw-semibold">${ex.name}</div></td>
+        <td>${ex.dateEnd.toLocaleTimeString('ru-RU')}</td>
+        <td>${ex.reps}</td>
+        <td>${ex.weight}</td>
+        <td class="text-secondary">${ex.time}с</td>
+        <td>
+          <select class="form-select form-select-sm" name="complatedExerciseScore" data-index="${i}">
+            ${option}
+            </select>
+        </td>
+        <td><input type="text" class="form-control form-control-sm" name="complatedExerciseComent" data-index="${i}" value="${ex.comment}"></td>
+      </tr>`;
+  }
+  document.getElementById('tableCompletedBody').innerHTML = html;
+  
+}
+
+
+// Список: заполнения упражнениями
+function renderList() {
+  let html = '';
+  for (let i = 0; i < session.activeWorkout.exercises.length; i++) {
+    const ex = session.activeWorkout.exercises[i];
+    html += `
+      <div class="list-group-item d-flex align-items-center gap-3 ${ex.sets > 0 ? 'list-group-item-success' : ''}">
+        <img src="${ex.photoSmall}" class="thumb rounded flex-shrink-0" alt="${ex.name}">
+        <div class="flex-grow-1">
+          <div class="fw-semibold">${ex.name}</div>
+          <div class="d-flex gap-3 align-items-center mt-1">
+            <div class="input-group input-group-sm" style="width:110px;">
+              <span class="input-group-text">Повт</span>
+              ${renderInputNumber("reps", ex.id, ex.reps)}
+            </div>
+            <div class="input-group input-group-sm" style="width:100px;">
+              <span class="input-group-text">Кг</span>
+              ${renderInputNumber("weight", ex.id, ex.weight)}
+            </div>
+            <span class="text-secondary small">${ex.time}с</span>
+          </div>
+        </div>
+        ${renderStepperControl(ex.id, ex.sets)}
+      </div>`;
+  }
+  document.getElementById('listView').innerHTML = html;
+}
+
+
+// Карточка: заполнения упражнениями
+function renderCard() {
+  // Айдишник активного упражнения
+  const id = session.activeExerciseId
+  // Активное упражнения
+  const ex = session.activeWorkout.getExerciseById(id);
+  // порядковый номер упражнения
+  let position = session.activeWorkout.getElementPositionById(id);
+
+  document.getElementById('ccPhoto').src = ex.photoLarge;
+  document.getElementById('ccPhoto').alt = ex.name;
+  document.getElementById('ccCounter').textContent = `${position + 1} / ${session.activeWorkout.exercises.length}`;
+  document.getElementById('ccCounter').className = 'badge mb-2 ' + (ex.sets > 0 ? 'text-bg-success' : 'text-bg-secondary');
+  document.getElementById('ccName').textContent = ex.name;
+  document.getElementById('ccMeta').textContent = `${ex.time} сек / подход · выполнено сетов: ${ex.sets}`;
+
+  // Поле ввода для повторений и весов, добавляю span, если они будут не в одном контейнере то будет перенос строки
+  document.getElementById("ccFieldsWrapReps").innerHTML = '<span class="input-group-text">Повт</span>' + renderInputNumber("reps", ex.id, ex.reps);
+  document.getElementById("ccFieldsWrapWeight").innerHTML = '<span class="input-group-text">Кг</span>' + renderInputNumber("weight", ex.id, ex.weight);
+
+  // Кнопки управления сетами, +1 и -1
+  document.getElementById('ccStepperWrap').innerHTML = renderStepperControl(ex.id, ex.sets);
+
+  document.getElementById('ccCard').classList.toggle('cc-done', ex.sets > 0);
+  document.getElementById('ccDoneBadge').classList.toggle('d-none', ex.sets === 0);
+
+  // Точки-навигация внизу карточки
+  let dotsHtml = '';
+  for (let j = 0; j < session.activeWorkout.exercises.length; j++) {
+    // Все упражнения где есть хотябы 1 сет, отметить зеленой точкой
+    let color = session.activeWorkout.exercises[j].sets > 0 ? '#198754' : '#ced4da';
+    // Если упражнения текущее, то отметить его синей точкой
+    if (session.activeWorkout.exercises[j].id === id) color = '#0d6efd';
+    dotsHtml += `<button type="button" class="btn cc-dot" style="background:${color};" 
+    data-id="${session.activeWorkout.exercises[j].id}" 
+    title="${session.activeWorkout.exercises[j].name}"></button>`;
+  }
+
+  document.getElementById('ccDots').innerHTML = dotsHtml;
+}
+
+// Карточка итогов тренировки
+// Временное решение пока нету стиля карточки
+function renderCompletedCart(){
+  
+  let ex = session.completedWorkout
+  // Время  начала тренировки
+  document.getElementById("cardCompletedStart").textContent = ex.dateStart ? ex.dateStart.toLocaleTimeString('ru-RU') : "00:00:00";
+  // Время завершения тренировки
+  document.getElementById("cardCompletedEnd").textContent = ex.dateEnd ? ex.dateEnd.toLocaleTimeString('ru-RU') : "00:00:00";
+  // Продолжытельность тренировки
+  document.getElementById("cardCompletedDuration").textContent = ex.duration ? Timer.formatTime(Math.floor(ex.duration / 1000)) : "00:00:00";
+  // Количество выполненных сетов
+  document.getElementById("cardCompletedSetsTotal").textContent = ex.countSet;
+  // Количество уникальных упражнений
+  document.getElementById("cardCompletedExTotal").textContent = ex.countUniqueExercises;
+  // Поднято веса
+  document.getElementById("cardCompletedVolume").textContent = ex.totalWeightLifted + 'кг';
+  // КОментарий тренировки cardCompletedComment
+  document.getElementById("cardCompletedComment").textContent = ex.comment;
+  // бщая оценка
+  document.getElementById("cardCompletedScore").value = ex.complexityAssessment;
+  document.getElementById("cardCompletedScoreBadge").textContent = ex.complexityAssessment;
+
+}
+
+
+// Кнопки переключения вида: обновить, установить активное отображения
+function updateViewVisibility(){
+  const isMainPage = session.pageWiew === 'main';
+
+  document.getElementById("tableView").classList.toggle("d-none", !isMainPage || session.view !== 'table')
+  document.getElementById("listView").classList.toggle("d-none", !isMainPage || session.view !== 'list')
+  document.getElementById("carouselView").classList.toggle("d-none", !isMainPage || session.view !== 'carousel')
+}
+
+
+// Кнопки переключения вида: обработка нажатия
+// Меняем глобальное состояния отображения setView, и render будет с учетом этого состояния
+document.getElementById("viewTable").addEventListener("change", () => {session.setView("table"); render();})
+document.getElementById("viewList").addEventListener("change", () => {session.setView("list"); render();})
+document.getElementById("viewCarousel").addEventListener("change", () => {session.setView("carousel"); render();})
+
+
+// Кнопка переключения тренировки: обработка нажатия
+// Тренировок может быть много, все кнопки находяться в контейнере workoutSwitcher
+// В поле data-workout-id указан айдишника тренировки
+// setActiveWorkoutByid меняет глобальное состояние сесии и заменяет тренировки
+// Ренедеринг происходит с учетом состояния тренировки
+document.getElementById("workoutSwitcher").addEventListener("change", (event) => {
+  if(!event.target.classList.contains("btn-check")){return;}
+  session.setActiveWorkoutByid(event.target.dataset.workoutId);
+  render();
+})
+
+
+// Кнопка, вперед и задад для карточки: обработка нажатия
+// setPrevIdExercise -  берет слудующее упражнения со списка
+// setNextIdExercise - берет предыдущее упражнения со списка
+// Логика мены упражнения не простая, нужно взять текущее упражнения, найти его порядковый номер, дальше найти слуд или пред
+// получить id упражнения и сделать его активным упражненеим, также котроль выхода за границы
+document.getElementById("ccPrev").addEventListener("click", () => {session.setPrevIdExercise(); render();})
+document.getElementById("ccNext").addEventListener("click", () => {session.setNextIdExercise(); render();})
+
+
+// Кнопка, точки в карточке: обработка нажатия
+// Слушаем контейнер, проверяем кнопки с полем data-id (айдишник упражнения)
+// Меняем глобальное состояние айдишника активной тренировки
+// Рендеренг будет с учетом айдишника активной тренировки
+document.getElementById("ccDots").addEventListener("click", (event) => {
+  let dot = event.target.closest("button[data-id]");
+  let id = Number(dot.dataset.id);
+  // Если нажали на кнопку текущего упражнения, ничего не делать
+  if(session.activeExerciseId === id) return;
+  session.activeExerciseId = id;
+  render();
+})
+
+
+// Кнопка старт: обработка события
+document.getElementById('start_timer').addEventListener('click', () => {
+  // Заблокировать кнопку старта
+  document.getElementById('start_timer').setAttribute('disabled', 'true')
+  // Разблокировать кнопку паузы
+  document.getElementById('pause_timer').removeAttribute('disabled')
+  // Разблокировать кнопку финиша
+  document.getElementById('stop_timer').removeAttribute('disabled')
+  // Установить значения старт
+  document.getElementById('btnStartLabel').textContent = "Старт"
+  // Записать время начала тренировки, одноразовая команда
+  session.completedWorkout.setDateStart();
+  // Запуск таймера
+  timer.start()
+
+});
+
+
+// Кнопка пауза: обработка события
+document.getElementById('pause_timer').addEventListener('click', () => {
+  // Разблокировать кнопку старта
+  document.getElementById('start_timer').removeAttribute('disabled')
+  // Заблокировать кнопку паузы
+  document.getElementById('pause_timer').setAttribute('disabled', 'true')
+  // Кнопку старт, заменить на продолжыть
+  document.getElementById('btnStartLabel').textContent = "Продолжить"
+  // Ставим таймер на паузу
+  timer.pause();
+});
+
+
+// Кнопка стоп/финиш: обработка события
+document.getElementById('stop_timer').addEventListener('click', () => {
+  // Установить значения старт
+  document.getElementById('btnStartLabel').textContent = "Старт"
+  // Заблокировать кнопку старта
+  document.getElementById('start_timer').setAttribute('disabled', 'true')
+  // Заблокировать кнопку Паузы
+  document.getElementById('pause_timer').setAttribute('disabled', 'true')
+  // Заблокировать кнопку финиша
+  document.getElementById('stop_timer').setAttribute('disabled', 'true')
+  // Остановить таймер
+  timer.stop();
+  timer.onTick(timer); // обновить экран сразу (иначе останется последнее значение до следующего тика)
+  // Расчитать итоговые показатели дренировки
+  session.completedWorkout.calculateTotal();
+  // Переключить страницу на итоговою
+  // session.pageWiew = session.pageWiew === 'main' ? 'end' : 'main';
+  session.pageWiew = 'end';
+  render();
+
+});
+
+// Обработчки редактированя поля воода для числа
+function handleFieldChange(event){
+  let target = event.target;
+  // Если в теге есть моле name с weight или reps
+  if(target.name !== "weight" && target.name !== "reps") return;
+
+  // Получаем айдишник упражнения
+  let id = Number(target.dataset.id)
+
+  // Присваиваем новое значения
+  if(target.name === "weight"){session.setWeight(id, Number(target.value))}
+  if(target.name === "reps"){session.setReps(id, Number(target.value))}
+}
+
+document.getElementById("tableBody").addEventListener("change", handleFieldChange);
+document.getElementById("listView").addEventListener("change", handleFieldChange);
+document.getElementById("ccFieldsWrapForEvent").addEventListener("change", handleFieldChange);
+
+
+// Обработчки увеличения или уменьшения сетов
+function handleSetsClick(event){
+  // найти кнопку на которую нажали
+  let btn = event.target.closest("button[data-action]");
+  // Если нету кнопки значит нажали на что то другое
+  if (!btn) return;
+  // Получить айдишник упражнения
+  let id = Number(btn.dataset.id);
+  // Если значения атрибуду action это plus значит + 1 к сету, иначе -1
+  let delta = btn.dataset.action === 'plus' ? 1 : -1;
+  // Изменяем кол сетов в классе
+  session.changeSets(id, delta)
+  render();
+}
+
+document.getElementById('tableBody').addEventListener('click', handleSetsClick);
+document.getElementById('listView').addEventListener('click', handleSetsClick);
+document.getElementById('ccStepperWrap').addEventListener('click', handleSetsClick);
+
+// Переключатель страницы, тренировка и итоги тренировки
+// Какой то таг, первый раз не работае а потом начинает работать
+// Управляет видимостью двух "страниц": main (тренировка) и end (итоги)
+function updatePageVisibility(){
+  const isMainPage = session.pageWiew === 'main';
+
+  // Блоки главной страницы
+  document.getElementById("TimeView").classList.toggle("d-none", !isMainPage);
+  document.getElementById("WorkoutSwitcherView").classList.toggle("d-none", !isMainPage);
+  //document.getElementById("loadStatus").classList.toggle("d-none", !isMainPage);
+
+  // Блоки страницы итогов
+  document.getElementById("cardCompletedView").classList.toggle("d-none", isMainPage);
+  document.getElementById("activityHeatmapView").classList.toggle("d-none", isMainPage);
+  document.getElementById("tableCompletedView").classList.toggle("d-none", isMainPage);
+  document.getElementById("BtnCompletedView").classList.toggle("d-none", isMainPage);
+}
+
+/*
+document.getElementById("swithPage").addEventListener("click", () => {
+  session.pageWiew = session.pageWiew === 'main' ? 'end' : 'main';
+  render();
+})
+*/
+
+// Позунок сложности тренировки
+function renderScore(event){
+  // Значения шкалы от 1 до 100
+  let value = Number(event.target.value)
+  // Бейдж, оценка справа от скалы
+  let badge = document.getElementById('cardCompletedScoreBadge');
+
+  // Определить задницы фон бейждыка
+  let styleBadge;
+  if (value <= 30) styleBadge = 'text-bg-success';
+  else if (value <= 60) styleBadge = 'text-bg-warning';
+  else styleBadge = 'text-bg-danger';
+
+  // Установить значения полоски для бейжждыка
+  badge.textContent = value
+  // Удалить все цвета бейждынка перед установкой нового
+  badge.classList.remove('text-bg-success', 'text-bg-warning', 'text-bg-danger');
+  // Установить новый цвет
+  badge.classList.add(styleBadge)
+  // Сохранить оценнку тренировки
+  session.completedWorkout.setComplexityAssessment(Number(value))
+}
+
+// updateDifficultyBadge Изменения ползунка, общей сложности стренировки
+document.getElementById("cardCompletedScore").addEventListener("change", renderScore)
+
+// Создание графика активности за полслежние пол года
+function renderHeatmap(){
+  let heatmapMonths = [
+    { label: 'Апр', days: 30, active: [2,3,6,9,10,13,17,20,24,27] },
+    { label: 'Май', days: 31, active: [1,4,5,8,11,15,18,19,22,25,29] },
+    { label: 'Июн', days: 30, active: [2,3,7,10,14,17,21,24,28] },
+    { label: 'Июл', days: 31, active: [1,2,5,8,9,12,16,19,23,26,30,31] },
+    { label: 'Авг', days: 31, active: [3,4,7,11,14,18,21,25,28] },
+    { label: 'Сен', days: 16, active: [1,2,5,8,9,12,15] }
+  ];
+
+  let container = document.getElementById("activityHeatmap");
+
+  let html = '';
+  for(let i = 0; i < heatmapMonths.length; i++){
+    // Создать строку
+    html += `<div class="heatmap-row"><div class="heatmap-label">${heatmapMonths[i].label}</div><div class="heatmap-cells">`;
+    for(let j = 1; j <= heatmapMonths[i].days; j++){
+      let isActive = heatmapMonths[i].active.includes(j);
+      // ДОбавить квартратич с учетом активный он или нет
+      html += `<div class="heatmap-cell${isActive ? ' active' : ''}" title="${heatmapMonths[i].label}, день ${j}"></div>`;
+
+    }
+    html += `</div></div>`;
+  }
+
+  container.innerHTML = html;
+  document.getElementById('activityTotalCount').textContent = 155;
+
+
+}
+
+// Слушаем поле воода коментария тренировки
+// Работает так, пока пользователь вводит, мы сбрасываем обработчки, как только он остановился
+// ждем секунду и бьерем значения
+let timeoutId;
+document.getElementById("cardCompletedComment").addEventListener("input", (event)=>{
+  clearTimeout(timeoutId);
+
+  timeoutId = setTimeout(() => {
+    let commentText = event.target.value;
+    console.log("Получено значение:", commentText);
+    // Сохранить комментрий тренировки
+    session.completedWorkout.setComment(commentText);
+  }, 1000);
+})
+
+// Обработка ввода оценки и комментрия для кадого упражнения
+// Важно ряботает через порядковый номер !!! так как упражнения может быть несколько!!!
+function callbackTableCompletedBody(event){
+  let target = event.target;
+  // Если в теге есть моле name с weight или reps
+  if(target.name !== "complatedExerciseScore" && target.name !== "complatedExerciseComent") return;
+  // порядоковый номер выполненого упражнения
+  let index = Number(target.dataset.index)
+  let value = null;
+  // Найти тренировку в логировании
+  let exercise = session.completedWorkout.exercise[index]
+
+  // Если ввели оценку упражнения
+  if(target.name === "complatedExerciseScore"){
+    value = Number(target.value)
+    exercise.setComplexityAssessment(value);
+  }else{
+    value = target.value
+    exercise.setComment(value)
+  }
+  
+
+}
+
+document.getElementById('tableCompletedBody').addEventListener("change", callbackTableCompletedBody)
+
+// ЛОгика сохранения данных
+let savintStatus = false
+document.getElementById("saveWorkoutBtn").addEventListener('click', ()=>{
+  if (!savintStatus){
+    // Заблокировать повторное сохранения
+    savintStatus=true;
+    // Переменные класса преобразовать в словарь для отправки
+    const payload = JSON.parse(JSON.stringify(session.completedWorkout));
+
+    google.script.run
+    .withSuccessHandler(function(response) {})
+    .withFailureHandler(function(err) {console.error('Ошибка: ' + err.message);})
+    .saveExecution3(payload);
+  }
+  
+  render();
+})
+
+/** Главная функция — вызывайте её после ЛЮБОГО изменения store */
+function render() {
+  renderBarLine();
+  renderSetCount();
+  renderTable();
+  renderList();
+  renderCard();
+  renderWorkoutSwitcher();
+  updateViewVisibility();
+  renderTree();
+  renderCompletedTable();
+  renderCompletedCart();
+  renderHeatmap();
+  updatePageVisibility();
+
+  // updateViewVisibility и updatePageVisibility ебала запутанная, нужно разобраться как нормально это делать
+}
+
+/*
+
+
+
+
+*/
+
+</script>
