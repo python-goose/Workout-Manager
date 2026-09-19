@@ -4,26 +4,30 @@
     <base target="_top">
     <!-- Подключаем Bootstrap 5 CSS через CDN -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <!-- Подключения иконок -->
+    <!-- Подключаем иконки Bootstrap Icons -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <style>
       html, body {height: 100%;margin: 0;overflow: hidden; }
       body {background-color: #f4f5f7;padding: 5px;user-select: none;}
       #draggable-header {cursor: move;}
-      /* Стили для миниатюры упражнения */
+      /* Миниатюра упражнения (мелкая иконка) */
       .exercise-thumb {width: 25px;height: 25px;object-fit: cover;border-radius: 4px;border: 1px solid #dee2e6;}
       .progress {position: relative;}
-      /* Общий класс для линий */
+      /* Вертикальная линия-разделитель на шкале прогресс-бара таймера */
       .progress-line {position: absolute;top: 0;bottom: 0;width: 1px;background-color: #fff;z-index: 3; pointer-events: none;}
+      /* Миниатюра упражнения в таблице/списке (45×45px) */
       .thumb { width: 45px; height: 45px; object-fit: cover; border-radius: 4px; border: 1px solid #dee2e6; }
+      /* Крупное фото упражнения в карточке/карусели */
       .cc-photo{ min-height:320px; max-height: 366px; height:100%; width:100%; object-fit:cover; }
+      /* Точка-навигация внизу карточки упражнения */
       .cc-dot{ width:10px; height:10px; border-radius:50%; padding:0; }
+      /* Подсветка карточки, когда у упражнения есть хотя бы один сет */
       #ccCard.cc-done{ border-color:#198754; border-width:2px; background:#f4fbf7; }
       .no-scrollbar {overflow-y: auto;scrollbar-width: none; -ms-overflow-style: none; }
       .no-scrollbar::-webkit-scrollbar {display: none;}
-      /* Изменения стиля для заголовка таблицы */
+      /* Стиль заголовка таблицы упражнений (основная тренировка) */
       #tableView .table thead th {font-weight:600;font-size:.9rem;color:#6c757d;border-bottom-width:1px;}
-      /* Изменения стиля для заголовка таблицы для выполненых упражнений */
+      /* Стиль заголовка таблицы выполненных упражнений (страница итогов) */
       #tableCompletedView .table thead th { font-weight:600; font-size:.8rem; color:#6c757d; border-bottom-width:1px; }
       /* Тепловая карта активности: строка = месяц, квадрат = день */
       .heatmap-row { display:flex; align-items:center; gap:8px; margin-bottom:3px; }
@@ -34,9 +38,12 @@
     </style>
   </head>
   <body>
-    <!-- <div class="container py-4" style="max-width:1200px;">-->
-    <!-- Контейнер, в которого есть две часки, фиксированная и та что скролиться, что бы таймер и навигация всегда былазафиксированная
-    а вся остальная информация, список тренировок и логи были доступны по скролу колесика -->
+    <!--
+      Контейнер разделён на две части:
+      1. Зафиксированная шапка (таймер, переключатель тренировки) — не скроллится.
+      2. Скроллируемая область (таблица/список/карточка упражнений, итоги) — скроллится колесиком.
+      Так таймер и навигация всегда остаются на экране.
+    -->
     <div class="d-flex flex-column p-0" style="height:100vh; max-width:1200px; margin:0 auto;">
 
       <!-- ===== ЗАФИКСИРОВАННАЯ ШАПКА: не сжимается, не скроллится ===== -->
@@ -71,10 +78,9 @@
       <div id="WorkoutSwitcherView" class="d-flex justify-content-between align-items-center mb-2 flex-wrap gap-2">
 
         <div class="d-flex align-items-center gap-3 flex-wrap">
-          <!-- Обработчки события на класс workoutSwitcher, для контроля выбранной тренировки, все что не btn-check игрорируеться-->
+          <!-- Кнопки-радио тренировок заполняются динамически (renderWorkoutSwitcher).
+               Слушаем change на всём контейнере; всё, что не btn-check, игнорируется. -->
           <div id="workoutSwitcher" class="btn-group" role="group" aria-label="Тренировка">
-            <!-- Заполняеться динамически -->
-            
           </div>
           <span class="text-secondary small">Выполнено сетов: <b id="totalSets">0</b></span>
         </div>
@@ -91,7 +97,8 @@
         </div>
       </div>
 
-      <!-- ================= ИТОГИ ВЫПОЛНЕНОЙ ТРЕНИРОВКИ ============== -->
+      <!-- ================= ИТОГИ ВЫПОЛНЕННОЙ ТРЕНИРОВКИ ================= -->
+      <!-- Показывается только на странице итогов (session.pageWiew === 'end') -->
       <div id="cardCompletedView" class="card shadow-sm mb-3 d-none">
         <div class="card-body">
           <div class="d-flex align-items-center justify-content-between mb-3">
@@ -163,6 +170,7 @@
       <div class="flex-grow-1 no-scrollbar px-3 pb-3">
 
       <!-- ================= ТАБЛИЦА ================= -->
+      <!-- Табличный вид упражнений активной тренировки. tbody заполняется динамически (renderTable) -->
       <div id="tableView" class="card shadow-sm" style="min-height:100px;">
         <div class="table-responsive">
           <table class="table table-hover align-middle mb-0">
@@ -176,16 +184,17 @@
                 <th style="width:170px;">Сеты</th>
               </tr>
             </thead>
-            <!-- Содержимое tbody целиком генерируется функцией renderTable() -->
             <tbody id="tableBody"></tbody>
           </table>
         </div>
       </div>
 
       <!-- ================= СПИСОК ================= -->
+      <!-- Альтернативный вид тех же упражнений — вертикальный список карточек (renderList) -->
       <div id="listView" class="list-group shadow-sm d-none"></div>
 
       <!-- ================= КАРТОЧКА / КАРУСЕЛЬ ================= -->
+      <!-- Третий вид: одно упражнение крупным планом с навигацией (updateCard) -->
       <div id="carouselView" class="d-none">
         <div class="card shadow-sm" id="ccCard">
           <div class="row g-0">
@@ -201,18 +210,18 @@
                   <span class="badge text-bg-secondary mb-2" id="ccCounter">1 / 1</span>
                   <h5 class="card-title" id="ccName"></h5>
                   <p class="text-secondary small mb-3" id="ccMeta"></p>
-                  <!-- ccFieldsWrapForEvent будет подвязано событие на изменения полей ввода -->
+                  <!-- Поля reps/weight подставляются в updateCard(); на этот контейнер
+                       (ccFieldsWrapForEvent) подписано событие change (onExerciseValueChange) -->
                   <div id="ccFieldsWrapForEvent" class="d-flex gap-3 mb-3 flex-wrap">
                     <div id="ccFieldsWrapReps" class="input-group input-group-sm" style="width:130px;">
-                      <!-- <input type="number" min="0" class="form-control form-control-sm" id="ccReps" name="reps"> -->
                     </div>
                     <div id="ccFieldsWrapWeight" class="input-group input-group-sm" style="width:120px;">
-                      <!--  <input type="number" min="0" class="form-control form-control-sm" id="ccWeight" name="weight">  -->
                     </div>
                   </div>
                 </div>
                 <div class="mt-auto">
-                  <!-- Кнопки +1 / -1 сет для карточки. Перерисовываются в renderCard(),т.к. номер упражнения (data-id) в карточке каждый раз разный -->
+                  <!-- Степпер сетов "-1/N/+1" перерисовывается в updateCard(),
+                       т.к. id активного упражнения каждый раз разный -->
                   <div class="mb-3" id="ccStepperWrap"></div>
                   <div class="d-flex justify-content-between align-items-center">
                     <button class="btn btn-outline-secondary btn-sm" id="ccPrev"><i class="bi bi-chevron-left"></i> Пред.</button>
@@ -228,7 +237,8 @@
       </div>
 
       <!-- ============ АКТИВНОСТЬ ЗА ПОЛГОДА + СЕРИЯ ПОДРЯД ============ -->
-      <!-- #activityHeatmap заполняется скриптом ниже (месяц = строка, зелёный квадрат = была тренировка) -->
+      <!-- Показывается только на странице итогов. #activityHeatmap заполняется
+           динамически (renderHeatmap): строка = месяц, зелёный квадрат = была тренировка -->
       <div id="activityHeatmapView" class="row g-3 mb-3 d-none">
         <div class="col-12 col-lg-8">
           <div class="card shadow-sm h-100">
@@ -254,7 +264,9 @@
         </div>
       </div>
 
-      <!-- ================= ВЫПОЛНЕНЫЕ УПРАЖНЕНИЯ ================= -->
+      <!-- ================= ВЫПОЛНЕННЫЕ УПРАЖНЕНИЯ ================= -->
+      <!-- Таблица итогов: одна строка на каждый выполненный подход (renderCompletedTable),
+           показывается только на странице итогов -->
       <div id="tableCompletedView" class="card shadow-sm mb-3 d-none">
         <div class="table-responsive">
           <table class="table table-hover align-middle mb-0">
@@ -276,39 +288,51 @@
         </div>
       </div>
 
-      <!-- ================= КНОПКИ, ЗАВЕРШЕНИЯ ТРЕНИРОВКИ ================= -->
+      <!-- ================= КНОПКИ ЗАВЕРШЕНИЯ ТРЕНИРОВКИ ================= -->
+      <!-- Показывается только на странице итогов -->
       <div id="BtnCompletedView" class="d-flex justify-content-end gap-2 mb-4 d-none">
-        <!-- <button class="btn btn-outline-secondary" id="aiAnalysisBtn"><i class="bi bi-stars"></i> AI анализ</button>-->
         <button class="btn btn-primary" id="saveWorkoutBtn"><i class="bi bi-cloud-arrow-up"></i> Сохранить тренировку</button>
       </div>
 
-       <!-- ================= ДЕБАГ ПАНЕЛЬ ================= -->
+      <!-- ================= ДЕБАГ ПАНЕЛЬ ================= -->
+      <!-- Дерево всего объекта session, для отладки (renderTree/buildTree) -->
       <div id="loadStatus" class="text-left text-secondary small mt-3 card shadow-sm mb-3 p-2 " style="min-height:30px;"></div>
 
+      </div> <!-- Конец скроллируемой области -->
+    </div> <!-- Конец контейнера -->
 
-      </div> <!-- Конец скролируемой области -->
-    </div> <!-- Конец контейнера, для скролируемой и фиксированной области -->
-    <!--</div>-->  <!-- Старый контейнер -->
-
-
-    
   </body>
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </html>
 
 <script>
 
+// ════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+//  1. КЛАССЫ ДАННЫХ
+// ════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+
+/**
+ * Создаёт объект упражнения, хранит информацию об упражнении. Например,
+ * упражнение — это отжимания или подтягивания на турнике.
+ *
+ * @category model
+ * @param {Object} data - сырые данные упражнения
+ * @param {Number} data.id - порядковый номер упражнения (уникальный)
+ * @param {String} data.name - название упражнения
+ * @param {Number} data.reps - количество повторений
+ * @param {Number} data.weight - дополнительный вес
+ * @param {Number} data.time - время выполнения всех повторений
+ * @param {String} data.photo_small - ссылка на фото, 45×45px
+ * @param {String} data.photo_large - ссылка на фото, 485×365px
+ *
+ * @property {Number} sets - количество выполненных подходов, изначально 0;
+ *   меняется через changeSets() в WorkoutSession
+ * @property {String} photoSmall - фото 45×45px; если photo_small не передан,
+ *   используется заглушка https://placehold.co/45x45
+ * @property {String} photoLarge - фото 485×365px; если photo_large не передан,
+ *   используется заглушка https://placehold.co/485x365
+ */
 class Exercise {
-  /**
-  * @param {Object} data - сырые данные одного упражнения
-  * @param {number} data.id - айдишник упражнения, в рамках тренировки
-  * @param {string} data.name - название упражнения
-  * @param {number} data.reps - количество повторений по умолчанию
-  * @param {number} data.weight - рабочий вес, кг
-  * @param {number} data.time - время выполнения упражнения (для reps)
-  * @param {string} data.photo_small - фото маленького размера для списка и таблицы (44pxх44px)
-  * @param {string} data.photo_large - фото среднего размера, для карточки
-  */
   constructor({id, name, reps, weight, time, photo_small, photo_large}){
     this.id = id
     this.name = name || "Название не указано";
@@ -321,51 +345,83 @@ class Exercise {
     // Сколько подходов выполнено, отмечаеться пользователем
     this.sets = 0; 
   }
-  
 }
 
+
+/**
+ * Создаёт объект тренировки, хранит информацию о тренировке и
+ * списке всех упражнений, которые в неё входят (Exercise).
+ *
+ * @category model
+ * @param {Object} data - сырые данные тренировки
+ * @param {Number} data.id - уникальный идентификатор тренировки
+ * @param {String} data.name - название тренировки
+ * @param {Boolean} data.archived - архивирована ли тренировка (не показывается в переключателе)
+ * @param {Array<Object>} data.exercises - список сырых данных упражнений,
+ *   каждый элемент будет превращён в экземпляр Exercise
+ *
+ * @property {Array<Exercise>} exercises - список упражнений тренировки,
+ *   уже как готовые экземпляры класса Exercise (не сырые данные)
+ */
 class Workout{
-  /** workouts = {name, exercises:[{},{}]}*/
-  constructor({name, id, archived, exercises}){
-    // Список упражнений
-    this.exercises = [];
-
-    // Название тренировки
-    this.name = name;
-
-    // id тренировки (string)
+  constructor({id, name, archived, exercises}){
     this.id = id
-
-    // Являеться ли тренировка хаархивированной
+    this.name = name;
     this.archived = archived;
+    this.exercises = [];
 
     for(let i = 0; i < exercises.length; i ++){
       this.exercises.push(new Exercise(exercises[i]))
     }
   }
 
-  // Получить упражнения по id упражнения
+  /**
+   * Находит упражнение по его id.
+   * 
+   * @category model
+   * @param {Number} id - id упражнения
+   * @returns {Exercise|undefined} - найденное упражнение, или undefined, если не найдено
+   * 
+  */
   getExerciseById(id){
     for(let i = 0; i < this.exercises.length; i++){
       if(this.exercises[i].id === id) return this.exercises[i]
     }
   }
 
-  // Получить порядковый номер упражнения по id упражнения
-  // Для логику, "След" и "Пред" упражнения
+  /**
+   * Находит порядковый номер упражнения в списке по его id.
+   * Используется для навигации "След."/"Пред." в карточке упражнения.
+   * 
+   * @category model
+   * @param {Number} id - id упражнения
+   * @returns {Number|undefined} - индекс упражнения в массиве exercises, или undefined
+  */
   getElementPositionById(id){
     for(let i = 0; i < this.exercises.length; i++){
       if(this.exercises[i].id === id) return i
     }
   }
-
 }
 
-// Выполненое упражнения
+
+/**
+ * Снимок выполненного упражнения. Наследует Exercise и копирует в себя
+ * все его поля через Object.assign — так получается независимая копия
+ * (не ссылка), зафиксированная на момент выполнения. Это нужно, потому что
+ * одно и то же упражнение пользователь может выполнить несколько раз за
+ * тренировку с разными повторениями и весом — каждый подход должен хранить
+ * свои собственные показатели, а не общую ссылку на исходное упражнение.
+ *
+ * @category model
+ * @extends Exercise
+ * @param {Exercise} exercise - экземпляр упражнения, с которого делается снимок
+ *
+ * @property {String} comment - комментарий к выполнению этого подхода, изначально пустой
+ * @property {Date} dateEnd - дата и время выполнения подхода, фиксируется в момент создания
+ * @property {Number} complexityAssessment - оценка сложности подхода от 1 до 100, изначально 1
+ */
 class CompletedExercise extends Exercise {
-  /**
-   * @param {Exercise} exercise - Экземпляр базового упражнения
-   */
   constructor(exercise) {
     // Обязательный вызов пустого super(), чтобы инициализировать класс-родитель
     super({}); 
@@ -374,75 +430,109 @@ class CompletedExercise extends Exercise {
     // Нужно сделать снимок упражнения, без ссылки на упражнения
     Object.assign(this, exercise);
 
-    // Коментарий упражнения
     this.comment = '';
-
-    // Дата и время выполнения упражнения
     this.dateEnd = new Date();
-
-    // Идея: оцените сложность упражнения от 1 до 100\
     this.complexityAssessment = 1;
   }
 
-  // Установить сложность упражнения
+  /**
+   * Устанавливает оценку сложности выполненного подхода.
+   *
+   * @category model
+   * @param {Number} value - оценка сложности от 1 до 100
+   */
   setComplexityAssessment(value){
     this.complexityAssessment = value;
   }
 
-  // Установить комментрий упражнения
+  /**
+   * Устанавливает комментарий к выполненному подходу.
+   *
+   * @category model
+   * @param {String} value - текст комментария
+   */
   setComment(value){
     this.comment = value;
   }
-
 }
 
-// Выполненая тренировка
+
+/**
+ * Хранит и рассчитывает итоговые данные выполненной тренировки: время
+ * старта/финиша, длительность, список выполненных подходов (CompletedExercise),
+ * суммарные показатели (сеты, уникальные упражнения, поднятый вес), а также
+ * оценку сложности и комментарий, которые пользователь ставит по завершении.
+ *
+ * @category model
+ *
+ * @property {Date|null} dateStart - момент начала тренировки, null до первого старта
+ * @property {Date|null} dateEnd - момент завершения тренировки, null до финиша
+ * @property {Number|null} duration - длительность тренировки в миллисекундах, null до финиша
+ * @property {Number} countSet - количество выполненных сетов (одна запись exercise = один сет)
+ * @property {Number} countUniqueExercises - количество уникальных упражнений в тренировке
+ * @property {Number} totalWeightLifted - суммарный поднятый вес (reps * weight по всем сетам)
+ * @property {Array<CompletedExercise>} exercise - список выполненных подходов
+ * @property {Number} complexityAssessment - оценка сложности тренировки от 1 до 100, изначально 20
+ * @property {String} comment - комментарий к тренировке
+ */
 class CompletedWorkout{
   constructor(){
-    // Дата и время старта тренировки, когда нажымаем кнопку старт
     this.dateStart = null;
-    // Дата и время завершения тренировки
     this.dateEnd = null;
-    // Продолджытельность тренировки
     this.duration = null;
-    // Количество выполненных сетов
     this.countSet = 0;
-    // Количество уникальных упражнений
     this.countUniqueExercises = 0;
-    // Количество поднятого веса
     this.totalWeightLifted = 0;
-    // Список выполненых упражнений, екземпляры CompletedExercise
     this.exercise = [];
-    // Оцените сложность тренировки в целом
      this.complexityAssessment = 20;
-    // Комментарий к тренировке
     this.comment;
   }
 
-  // Установить время начала тренировки один раз
+  /**
+   * Устанавливает время начала тренировки. Срабатывает только один раз —
+   * повторные вызовы (например, после паузы) ничего не меняют.
+   *
+   * @category model
+   */
   setDateStart(){
     if(this.dateStart === null) this.dateStart = new Date();
   }
 
-  // Установить конец тренировки один раз
+  /**
+   * Устанавливает время завершения тренировки. Срабатывает только один раз.
+   *
+   * @category model
+   */
   setDateEnd(){
     if(this.dateEnd === null) this.dateEnd = new Date();
   }
 
-  // Расчитать продолжтельность тренировки
+  /**
+   * Рассчитывает длительность тренировки в миллисекундах как разницу
+   * dateEnd - dateStart. Требует, чтобы обе даты уже были установлены.
+   *
+   * @category model
+   */
   setDuration(){
-    // Расчитать продолжительность тренировки (в миллисекундах)
-    this.duration = this.dateEnd - this.dateStart; // число, не Date
-
+    this.duration = this.dateEnd - this.dateStart;
   }
 
-  // Расчиатть количество выполненных сетов
+  /**
+   * Рассчитывает количество выполненных сетов — одна запись в exercise
+   * соответствует одному сету.
+   *
+   * @category model
+   */
   calculateSetCount(){
-    // Она запись, это один сет
     this.countSet = this.exercise.length
   }
 
-  // Количество уникальных упражнений
+  /**
+   * Рассчитывает количество уникальных упражнений среди выполненных сетов
+   * (упражнение может повторяться несколько раз за тренировку).
+   *
+   * @category model
+   */
   calculateCountUniqueExercises(){
     let uniq = []
     for(let i = 0; i < this.exercise.length; i++){
@@ -453,52 +543,72 @@ class CompletedWorkout{
     this.countUniqueExercises = uniq.length;
   }
 
-  // Количество поднятого веса
+  /**
+   * Рассчитывает суммарный поднятый вес по всем выполненным сетам
+   * (сумма reps * weight каждого подхода).
+   *
+   * @category model
+   */
   calculateTotalWeightLifted(){
     for(let i = 0; i < this.exercise.length; i++){
       this.totalWeightLifted += this.exercise[i].reps * this.exercise[i].weight
     }
   }
 
-  
-  // Добавить выполненное упражнения
+  /**
+   * Фиксирует новый выполненный подход — создаёт снимок (CompletedExercise)
+   * переданного упражнения и добавляет его в список.
+   *
+   * @category model
+   * @param {Exercise} exercise - экземпляр упражнения, которое выполнили
+   */
   addExercise(exercise){
     this.exercise.push(new CompletedExercise(exercise))
   }
 
-  // Удалить выполненое упражнения
+  /**
+   * Удаляет последнюю запись выполненного подхода с указанным id упражнения
+   * (используется при отмене сета — поиск идёт с конца списка).
+   *
+   * @category model
+   * @param {Number} id - id упражнения
+   */
   delExerciseById(id){
-    // Делаем поиск с конца, находим упражнения по id упражнения и удалем его со списка
     for(let i = this.exercise.length - 1; i >= 0; i--){
       if(id === this.exercise[i].id){
-        // Удалить елемент со списка по индексу, 1 раз
         this.exercise.splice(i, 1);
         break;
       }
     }
   }
 
-  // Установить общюю сложность тренировки
+  /**
+   * Устанавливает общую оценку сложности тренировки.
+   *
+   * @category model
+   * @param {Number} value - оценка сложности от 1 до 100
+   */
   setComplexityAssessment(value){
     this.complexityAssessment = value
   }
 
-  // Установить комментрий к тренировке
+  /**
+   * Устанавливает комментарий к тренировке.
+   *
+   * @category model
+   * @param {String} value - текст комментария
+   */
   setComment(value){
     this.comment = value;
   }
 
-  // Найти выполненное упражнения по айдишнику упражнения
-  /*
-  getExerciseById(id){
-    for(let i = 0; i < this.exercise.length; i++){
-      if(id === this.exercise[i].id){
-        return this.exercise[i].id
-      }
-    }
-  }*/
-
-  // Расчитать все показатели по завершению тренировки
+  /**
+   * Рассчитывает все итоговые показатели тренировки разом: фиксирует
+   * дату финиша, длительность, количество сетов, уникальных упражнений
+   * и суммарный поднятый вес. Вызывается один раз, по завершении тренировки.
+   *
+   * @category model
+   */
   calculateTotal(){
     this.setDateEnd();
     this.setDuration();
@@ -508,38 +618,48 @@ class CompletedWorkout{
   }
 }
 
-class WorkoutSession {
-  /** workouts = [{name, exercises}{}] */
-  constructor(workouts){
-    // Список тренировок
-    this.workouts = [];
 
-    // Текущий отображаемый вид: 'table' | 'list' | 'carousel'
+/**
+ * Центральное хранилище состояния приложения (что-то вроде store) — держит
+ * список всех тренировок, текущую активную тренировку и упражнение, текущий
+ * вид отображения (таблица/список/карточка), а также лог выполненной
+ * тренировки (completedWorkout). Всё управление данными тренировки идёт
+ * через методы этого класса.
+ *
+ * @category model
+ * @param {Array<Object>} workouts - список сырых данных тренировок,
+ *   каждый элемент превращается в экземпляр Workout
+ *
+ * @property {Array<Workout>} workouts - список тренировок сессии
+ * @property {'table'|'list'|'carousel'} view - текущий вид отображения упражнений
+ * @property {Workout} activeWorkout - тренировка, которая сейчас открыта пользователем
+ * @property {Number} activeExerciseId - id упражнения, активного сейчас в карточке (для view: carousel)
+ * @property {Number} totalSets - суммарное количество выполненных сетов за сессию
+ * @property {CompletedWorkout} completedWorkout - лог выполненных действий текущей тренировки
+ * @property {'main'|'end'} pageWiew - текущая отображаемая страница: тренировка или итоги
+ */
+class WorkoutSession {
+  constructor(workouts){
+    this.workouts = [];
     this.view = "table"
 
     for(let i = 0; i < workouts.length; i++){
       this.workouts.push(new Workout(workouts[i]))
     }
 
-    // Текущая активная тренировка
     this.activeWorkout = this.workouts[0]
-
-    // Айдишник текущего активного упражнения
     this.activeExerciseId = this.activeWorkout.exercises[0].id
-
-    // Выполнено сетов всего
     this.totalSets = 0
-
-    // ЛОгирования выполненных действий, тренировки и упражнений
     this.completedWorkout = new CompletedWorkout();
-
-    // Текущий отображаемый вид страницы: 'main' | 'end' 
     this.pageWiew = 'main';
   }
 
   /**
-   * Переключает активную тренировку по названию.
-   * @param {string} id - название тренировки для поиска
+   * Переключает активную тренировку по её id. Если тренировка найдена,
+   * также сбрасывает активное упражнение на первое в её списке.
+   *
+   * @category model
+   * @param {String} id - id тренировки для поиска
    */
   setActiveWorkoutByid(id){
     for(let i = 0; i < this.workouts.length; i++){
@@ -553,41 +673,53 @@ class WorkoutSession {
     console.warn(`Тренировка "${id}" не найдена в сессии (id)`);
   }
 
-  // Установить новое значения для отображения списка тренировок
+  /**
+   * Устанавливает текущий вид отображения упражнений.
+   *
+   * @category model
+   * @param {'table'|'list'|'carousel'} name - название вида
+   */
   setView(name){
     this.view = name
   }
 
-  // Сместить айдишник активного упражнения на следующий
+   /**
+   * Смещает активное упражнение на предыдущее в списке. При выходе
+   * за начало списка переходит на последнее упражнение (зацикливание).
+   *
+   * @category model
+   */
   setPrevIdExercise(){
-    // Список текущий активных упражнений
     let list = this.activeWorkout.exercises
-    // Позицыя текущего активного упражнения
     let position = this.activeWorkout.getElementPositionById(this.activeExerciseId)
-    // Позицыю смещаем на 1 в низ
     position = position - 1;
-    // Если переступили границу, от берем порядковый номер последнего упражнения
     if(position < 0 ) position = list.length - 1
-    // Обновляем айдишник активного упражнения
     this.activeExerciseId = list[position].id;
   }
 
-  // Сместить айдишник активного упражнения на предыдущий
+  /**
+   * Смещает активное упражнение на следующее в списке. При выходе
+   * за конец списка переходит на первое упражнение (зацикливание).
+   *
+   * @category model
+   */
   setNextIdExercise(){
-    // Список тукущих активных упражнений
     const list = this.activeWorkout.exercises;
-    // Позицыя текущего активного упражнения
     let position = this.activeWorkout.getElementPositionById(this.activeExerciseId);
-    // Евеличивыем позицыю на 1
     position = position + 1;
-    // Если вышли за пределы, то берем позицыю 0
     if(position >= list.length){ position = 0; }
-    // Обновляем айдишник активного упражнения
     this.activeExerciseId = list[position].id;
   }
 
 
-  // Найти упражнения по id и установить новое значения "Повторений"
+  /**
+   * Находит упражнение по id в активной тренировке и устанавливает
+   * новое значение количества повторений.
+   *
+   * @category model
+   * @param {Number} exerciseId - id упражнения
+   * @param {Number} value - новое количество повторений
+   */
   setReps(exerciseId, value){
     for(let i = 0; i < this.activeWorkout.exercises.length; i++){
       if(this.activeWorkout.exercises[i].id === exerciseId){
@@ -597,7 +729,14 @@ class WorkoutSession {
     }
   }
 
-  // Найти упражнения по id и установить новое значения "Вес"
+  /**
+   * Находит упражнение по id в активной тренировке и устанавливает
+   * новое значение рабочего веса.
+   *
+   * @category model
+   * @param {Number} exerciseId - id упражнения
+   * @param {Number} value - новое значение веса
+   */
   setWeight(exerciseId, value){
     for(let i = 0; i < this.activeWorkout.exercises.length; i++){
       if(this.activeWorkout.exercises[i].id === exerciseId){
@@ -607,20 +746,27 @@ class WorkoutSession {
     }
   }
 
-  // Увеличение или уменьшение количество сетов
+  /**
+   * Увеличивает или уменьшает количество выполненных сетов у упражнения.
+   * При первом сете (delta === 1, было 0) автоматически переключает
+   * активное упражнение на следующее — так одно и то же упражнение можно
+   * выполнить несколько раз, не застревая на нём в интерфейсе.
+   * Синхронно ведёт лог в completedWorkout: при +1 добавляет запись
+   * о выполненном подходе, при -1 удаляет последнюю такую запись.
+   * Не даёт уйти в минус — если сетов 0, а delta === -1, ничего не делает.
+   *
+   * @category model
+   * @param {Number} exerciseId - id упражнения
+   * @param {Number} delta - на сколько изменить количество сетов (1 или -1)
+   */
   changeSets(exerciseId, delta){
     for(let i = 0; i < this.activeWorkout.exercises.length; i++){
       if(this.activeWorkout.exercises[i].id === exerciseId){
-        // Что бы количество сетов не ушли в минус
         if(this.activeWorkout.exercises[i].sets === 0 && delta === -1) return;
         this.totalSets += delta;
-        // Если сетов было 0, тогда переходим на слуюущее упражнения
-        // Ситуация когда одно упражнения выполнено 3 раза и айдишик упражнения будет +3
         if(this.activeWorkout.exercises[i].sets === 0 && delta === 1) this.setNextIdExercise();
-        // Увеличиваем или умешьшаем сеты
         this.activeWorkout.exercises[i].sets += delta;
 
-        //Сохранить или удалить запись с логирования
         if(delta === 1){
           this.completedWorkout.addExercise(this.activeWorkout.exercises[i])
         }else{
@@ -630,48 +776,82 @@ class WorkoutSession {
       }
     }
   }
-
 }
 
 
-
+/**
+ * Таймер тренировки с тремя фазами — подготовка, тренировка, перетренированность
+ * (превышение планового времени). Работает через setInterval с шагом в секунду
+ * и уведомляет внешний код о каждом тике через callback onTick, который нужно
+ * подключить снаружи (instance.onTick = function(t){...}).
+ *
+ * @category model
+ * @param {Number} prepSeconds - время подготовки, сек
+ * @param {Number} trainSeconds - время тренировки, сек
+ * @param {Number} overtimeFactor - коэффициент допустимого перетренировки
+ *   (доля от trainSeconds, например 0.2 = 20% сверх тренировочного времени)
+ *
+ * @property {Number} prepSeconds - время подготовки, сек
+ * @property {Number} trainSeconds - время тренировки, сек
+ * @property {Number} overtimeFactor - коэффициент перетренировки
+ * @property {Number} totalSeconds - общая длительность таймера (prep + train + overtime), сек
+ * @property {Number} currentSeconds - сколько секунд уже прошло с начала отсчёта
+ * @property {Number|null} intervalId - id таймера setInterval; null, если таймер не запущен
+ * @property {Function|null} onTick - callback, вызывается каждую секунду с this в качестве аргумента;
+ *   null, пока не подключён снаружи
+ */
 class Timer{
-  /**
-   * @param {number} prepSeconds  - время подготовки, сек
-   * @param {number} trainSeconds - время тренировки, сек
-   * @param {float} overtimeFactor - процент учеличения
-   */
   constructor(prepSeconds, trainSeconds, overtimeFactor){
     this.prepSeconds = prepSeconds;
     this.trainSeconds = trainSeconds;
     this.overtimeFactor = overtimeFactor;
     this.totalSeconds = Math.ceil(prepSeconds + trainSeconds + (trainSeconds * overtimeFactor));
 
-    // Текущее время
     this.currentSeconds = 0;
-    //  хендл setInterval, null = таймер не запущен
     this.intervalId = null;
-    // callback, который вызывается каждую секунду — сюда мы подключим отрисовку
     this.onTick = null;
   }
 
+  /**
+   * Проверяет, запущен ли таймер сейчас.
+   *
+   * @category model
+   * @returns {Boolean} true, если таймер работает (intervalId установлен)
+   */
   isRunning(){
     return this.intervalId !== null;
   }
 
-  /** Текущая стадия: 'prep' | 'train' | 'overtrain' */
+  /**
+   * Определяет текущую фазу тренировки на основе прошедшего времени.
+   *
+   * @category model
+   * @returns {'prep'|'train'|'overtrain'} текущая фаза
+   */
   getPhase(){
-    // Больше или равно, и тогда после пересецения линии будет новый цвет
     if(this.currentSeconds <= this.prepSeconds) return "prep";
     if(this.currentSeconds <= this.prepSeconds + this.trainSeconds) return "train";
     return "overtrain"
   }
 
-  /** Прогресс в процентах для полосы загрузки */
+  /**
+   * Рассчитывает прогресс таймера в процентах от общей длительности,
+   * для отображения на полосе загрузки. Не превышает 100.
+   *
+   * @category model
+   * @returns {String} процент прогресса, с двумя знаками после запятой
+   */
   getPercent(){
     return Math.min(100, (this.currentSeconds / this.totalSeconds) * 100).toFixed(2);
   }
 
+  /**
+   * Запускает таймер — каждую секунду увеличивает currentSeconds
+   * и вызывает onTick, если он подключён. Повторный вызов на уже
+   * запущенном таймере ничего не делает.
+   *
+   * @category model
+   */
   start(){
     if(this.isRunning()) return; // Если уже работает то ничего не делать
     this.intervalId = setInterval(() => {
@@ -682,22 +862,40 @@ class Timer{
       // 3. Внутри класса зовём эту функцию и передаём ей "this" — ссылку на ТЕКУЩИЙ
       // экземпляр, чтобы колбэк знал, чьи это данные (важно, если экземпляров
       // несколько и у всех один и тот же колбэк).
-      // Понять проще, если вместо this передаем какое то значение
-      if (this.onTick) this.onTick(this); // сообщаем "наружу", что секунда прошла
+      if (this.onTick) this.onTick(this);
       
     }, 1000)
   }
 
+  /**
+   * Ставит таймер на паузу — останавливает интервал, currentSeconds
+   * сохраняет текущее значение (не сбрасывается).
+   *
+   * @category model
+   */
   pause(){
     clearInterval(this.intervalId);
     this.intervalId = null;
   }
 
+  /**
+   * Полностью останавливает таймер — останавливает интервал
+   * и сбрасывает currentSeconds в 0.
+   *
+   * @category model
+   */
   stop(){
     this.pause()
     this.currentSeconds = 0;
   }
 
+  /**
+   * Форматирует количество секунд в строку вида ЧЧ:ММ:СС.
+   *
+   * @category model
+   * @param {Number} totalSeconds - количество секунд
+   * @returns {String} время в формате ЧЧ:ММ:СС
+   */
   static formatTime(totalSeconds){
     let h = String(Math.floor(totalSeconds / 3600)).padStart(2, '0');
     let m = String(Math.floor((totalSeconds % 3600) / 60)).padStart(2, '0');
@@ -726,7 +924,7 @@ function on_data_loader(workouts){
   // Создание таймера
   timer = new Timer(20, 900, 0.2);
   // Повешать отработчки (каждая секунжа)
-  timer.onTick = callbackOnTick;
+  timer.onTick = updateTimerCallback;
   // Рендер всех компонентов
   render()
 
@@ -736,41 +934,23 @@ function on_data_error(err){
   document.getElementById("loadStatus").textContent = 'Не получилось загрузить упражнения' + err.message;
 }
 
-// Обновления времени и прогрес бара каждую секунду
-function callbackOnTick(t){
-  let bar = document.getElementById('my_progress');
-  let card = document.getElementById('TimeView');
+// ════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+//  2. УТИЛИТЫ
+// ════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 
-  // Задать новое значение шкалы прогрес бара
-  bar.style.width = t.getPercent() + "%";
-  bar.textContent = t.getPercent() + "%";
-
-  // Обновить таймер на клиенте
-  document.getElementById("timer_text").textContent = Timer.formatTime(t.currentSeconds);
-
-  // Очистить классы бара и обводку карточки
-  card.classList.remove('border-warning', 'border-success', 'border-danger', 'border-2', 'border-opacity-50');
-  bar.classList.remove('bg-warning', 'bg-success', 'bg-danger');
-
-  // Получить текущее состояние тренировки (этап) 'prep' | 'train' | 'overtrain'
-  let phase = t.getPhase();
-
-  // В зависимости от состояние тренировки, становить задний фон прогрес бара и обводку карточки
-  if(phase === 'prep'){
-    bar.classList.add("bg-warning");
-    card.classList.add('border-warning', 'border-2', 'border-opacity-50')
-  }else if (phase === 'train'){
-    bar.classList.add("bg-success");
-    card.classList.add('border-success', 'border-2', 'border-opacity-50')
-  }else{
-    bar.classList.add("bg-danger");
-    card.classList.add('border-danger', 'border-2', 'border-opacity-50')
-  }
-}
-
-
-/* Создания дерева обьектов класса */
-function bildTree(value, label){
+/**
+ * Рекурсивно строит древовидное HTML-представление произвольного значения
+ * (используется для дебаг-панели, чтобы наглядно показать всю структуру session).
+ * Примитивы (число, строка, boolean, null) рисуются как простая строка
+ * "label: значение". Объекты и массивы рисуются как раскрывающийся <details>
+ * с рекурсивно построенными дочерними элементами внутри.
+ *
+ * @category util
+ * @param {*} value - значение для отображения: примитив, массив или объект
+ * @param {String} label - подпись, под которой показывается это значение
+ * @returns {HTMLElement} DOM-элемент (div для примитива, details для объекта/массива)
+ */
+function buildTree(value, label){
   // Для определенных переменных будет подсказка в названии (summary)
   let helper = "";
   if(label === "workouts"){helper = "Список тренировок"}
@@ -778,29 +958,8 @@ function bildTree(value, label){
 
   // ====== Базовый случай, когда завершения рекурсии ======
 
-  // Если елемент это число 🛑
-  if(typeof value === "number"){
-    let leaf = document.createElement("div");
-    leaf.textContent = `${label}: ${value}`;
-    return leaf
-  }
-
-  // Есди переменная пустая
-  if(value === null){
-    let leaf = document.createElement("div");
-    leaf.textContent = `${label}: ${value}`;
-    return leaf
-  }
-
-  // Если переменная строка
-  if(typeof value === "string"){
-    let leaf = document.createElement("div");
-    leaf.textContent = `${label}: ${value}`;
-    return leaf
-  }
-
-  // Если переменная логическое выражение
-  if(typeof value === "boolean"){
+  // Примитивы (число, строка, boolean, null) — рисуются одинаково
+  if(typeof value === "number" || typeof value === "string" || typeof value === "boolean" || value === null){
     let leaf = document.createElement("div");
     leaf.textContent = `${label}: ${value}`;
     return leaf
@@ -834,7 +993,7 @@ function bildTree(value, label){
 
   for(let i = 0; i < keys.length; i++){
     let key = keys[i];
-    let child = bildTree(value[key], String(key))
+    let child = buildTree(value[key], String(key))
     child.style.marginLeft = "16px"
     node.appendChild(child)
   }
@@ -842,34 +1001,70 @@ function bildTree(value, label){
   return node;
 }
 
+// ════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+//  3. RENDER
+// ════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 
-// Отрисовать дерево обьектов
+/**
+ * Строит HTML-разметку поля ввода числа — используется для полей
+ * "повторения" и "вес" в таблице, списке и карточке упражнения.
+ *
+ * @category render
+ * @param {'reps'|'weight'} name - имя поля, определяет, что именно редактируется
+ * @param {Number} id - id упражнения, к которому относится поле
+ * @param {Number} value - текущее значение поля
+ * @returns {String} HTML-строка с готовым input-элементом
+ */
+function renderInputNumber(name, id, value){
+  return `<input type="number" min="0" class="form-control form-control-sm" name="${name}" data-id="${id}" value="${value}">`
+}
+
+
+/**
+ * Строит HTML-разметку степпера сетов "-1 / N / +1" — используется одинаково
+ * в таблице, списке и карточке упражнения. Кнопки помечены атрибутом
+ * data-action ("plus"/"minus"), по которому обработчик клика определяет,
+ * увеличить или уменьшить количество сетов.
+ *
+ * @category render
+ * @param {Number} id - id упражнения, к которому относится степпер
+ * @param {Number} sets - текущее количество выполненных сетов
+ * @returns {String} HTML-строка с готовым степпером
+ */
+function renderStepperControl(id, sets){
+  return `
+  <div class="btn-group btn-group-sm" role="group">
+    <button class="btn btn-outline-secondary" data-action="minus" data-id="${id}" title="Отменить последний сет"><i class="bi bi-dash"></i>1</button>
+    <span class="btn btn-outline-secondary disabled fw-bold">${sets}</span>
+    <button class="btn btn-success" data-action="plus" data-id="${id}" title="Записать сет"><i class="bi bi-plus"></i>1</button>
+  </div>`;
+}
+
+
+/**
+ * Строит и вставляет в дебаг-панель дерево всего объекта session —
+ * позволяет наглядно видеть текущее состояние приложения целиком.
+ *
+ * @category render
+ */
 function renderTree(){
-  let tree = bildTree(session, "session");
+  let tree = buildTree(session, "session");
   let loadStatus = document.getElementById("loadStatus");
   loadStatus.innerHTML = "";
   loadStatus.appendChild(tree);
 }
 
 
-// Две линии на шкале прогрес бара
-function renderBarLine(){
-  // Процентная шкала, делиться на 3 части, нарисовать две линии
-  const stepPercent = 100 / timer.totalSeconds;
-  document.getElementById('line-first').style.left = (stepPercent * timer.prepSeconds) + '%';
-  document.getElementById('line-second').style.left = (stepPercent * (timer.prepSeconds + timer.trainSeconds)) + '%';
-}
-
-function renderSetCount(){
-  document.getElementById("totalSets").textContent = session.totalSets;
-}
-
-
-// Переключатель тренировки
-function renderWorkoutSwitcher(id){
+/**
+ * Строит переключатель тренировок (кнопки-радио) — по одной кнопке
+ * на каждую неархивированную тренировку. Активной помечается та, что
+ * совпадает с session.activeWorkout.
+ *
+ * @category render
+ */
+function renderWorkoutSwitcher(){
   let html = ``
   for(let i = 0; i < session.workouts.length; i++){
-    // если тренировка заархивированная пропустить ее
     if(session.workouts[i].archived){continue;}
     let id = session.workouts[i].id
     let name = session.workouts[i].name
@@ -880,34 +1075,14 @@ function renderWorkoutSwitcher(id){
   document.getElementById('workoutSwitcher').innerHTML = html
 }
 
-/**
- * Поле ввода числа, для повторений, веса и времени
- * @param {string} name - "reps" или "weight"
- * @param {number} id - id упражнения
- * @param {number} value - текущее значение
- * Через поле name определяеться измеенния, веса, повторений или времени
- */
-function renderInputNumber(name, id, value){
-  return `<input type="number" min="0" class="form-control form-control-sm" name="${name}" data-id="${id}" value="${value}">`
-}
 
 /**
- * Степпер сетов "-1 / N / +1" — одинаковый для таблицы, списка и карточки.
- * @param {number} id - id упражнения
- * @param {number} sets - текущее количество выполненных сетов
- * button[data-action] = plus, определяеться увеличения или уменьшения сетов
+ * Рисует табличное представление упражнений активной тренировки —
+ * по одной строке на упражнение, с полями reps/weight и степпером сетов.
+ * Выполненные упражнения (sets > 0) подсвечиваются зелёным.
+ *
+ * @category render
  */
-function renderStepperControl(id, sets){
-  return `
-  <div class="btn-group btn-group-sm" role="group">
-    <button class="btn btn-outline-secondary" data-action="minus" data-id="${id}" title="Отменить последний сет"><i class="bi bi-dash"></i>1</button>
-    <span class="btn btn-outline-secondary disabled fw-bold">${sets}</span>
-    <button class="btn btn-success" data-action="plus" data-id="${id}" title="Записать сет"><i class="bi bi-plus"></i>1</button>
-  </div>`;
-
-}
-
-// Таблица: заполнения упражнениями
 function renderTable() {
   let html = '';
   for (let i = 0; i < session.activeWorkout.exercises.length; i++) {
@@ -928,7 +1103,14 @@ function renderTable() {
   document.getElementById('tableBody').innerHTML = html;
 }
 
-// Таблица: заполнения упражнениями
+
+/**
+ * Рисует таблицу итогов — по одной строке на каждый выполненный подход
+ * (session.completedWorkout.exercise), с выбором оценки сложности (1–10)
+ * и полем для комментария к этому подходу.
+ *
+ * @category render
+ */
 function renderCompletedTable() {
   let html = '';
   for (let i = 0; i < session.completedWorkout.exercise.length; i++) {
@@ -939,6 +1121,7 @@ function renderCompletedTable() {
       if(ex.complexityAssessment === j) selected = "selected"
       option += `<option value="${j}" ${selected}>${j}</option>`
     }
+
     html += `
       <tr>
         <td><img src="${ex.photoSmall}" class="thumb rounded flex-shrink-0" alt="${ex.name}"></td>
@@ -956,11 +1139,15 @@ function renderCompletedTable() {
       </tr>`;
   }
   document.getElementById('tableCompletedBody').innerHTML = html;
-  
 }
 
-
-// Список: заполнения упражнениями
+/**
+ * Рисует список упражнений активной тренировки в виде вертикальных карточек —
+ * альтернатива renderTable() для того же набора данных. Выполненные
+ * упражнения (sets > 0) подсвечиваются зелёным.
+ *
+ * @category render
+ */
 function renderList() {
   let html = '';
   for (let i = 0; i < session.activeWorkout.exercises.length; i++) {
@@ -989,8 +1176,126 @@ function renderList() {
 }
 
 
-// Карточка: заполнения упражнениями
-function renderCard() {
+/**
+ * Рисует тепловую карту активности за последние полгода — строка на месяц,
+ * квадрат на день, активные дни подсвечены. Данные сейчас захардкожены,
+ * позже должны приходить из session (см. TODO ниже).
+ *
+ * TODO: heatmapMonths и activityTotalCount сейчас статические заглушки,
+ * нужно заменить на реальные данные из session/сервера.
+ *
+ * @category render
+ */
+function renderHeatmap(){
+  let heatmapMonths = [
+    { label: 'Апр', days: 30, active: [2,3,6,9,10,13,17,20,24,27] },
+    { label: 'Май', days: 31, active: [1,4,5,8,11,15,18,19,22,25,29] },
+    { label: 'Июн', days: 30, active: [2,3,7,10,14,17,21,24,28] },
+    { label: 'Июл', days: 31, active: [1,2,5,8,9,12,16,19,23,26,30,31] },
+    { label: 'Авг', days: 31, active: [3,4,7,11,14,18,21,25,28] },
+    { label: 'Сен', days: 16, active: [1,2,5,8,9,12,15] }
+  ];
+
+  let container = document.getElementById("activityHeatmap");
+
+  let html = '';
+  for(let i = 0; i < heatmapMonths.length; i++){
+    // Создать строку
+    html += `<div class="heatmap-row"><div class="heatmap-label">${heatmapMonths[i].label}</div><div class="heatmap-cells">`;
+    for(let j = 1; j <= heatmapMonths[i].days; j++){
+      let isActive = heatmapMonths[i].active.includes(j);
+      // ДОбавить квартратич с учетом активный он или нет
+      html += `<div class="heatmap-cell${isActive ? ' active' : ''}" title="${heatmapMonths[i].label}, день ${j}"></div>`;
+
+    }
+    html += `</div></div>`;
+  }
+
+  container.innerHTML = html;
+  document.getElementById('activityTotalCount').textContent = 155;
+}
+
+// ════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+//  4. UPDATE
+// ════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+
+
+/**
+ * Обновляет прогресс-бар и текст таймера каждую секунду — вызывается как
+ * callback из Timer.onTick (не как обычное DOM-событие, а через подключение
+ * timer.onTick = updateTimerCallback). Красит прогресс-бар и рамку карточки
+ * таймера в цвет, соответствующий текущей фазе (подготовка/тренировка/
+ * перетренированность).
+ *
+ * @category update
+ * @param {Timer} t - экземпляр таймера, передаётся самим Timer при каждом тике
+ */
+function updateTimerCallback(t){
+  let bar = document.getElementById('my_progress');
+  let card = document.getElementById('TimeView');
+
+  // Задать новое значение шкалы прогрес бара
+  bar.style.width = t.getPercent() + "%";
+  bar.textContent = t.getPercent() + "%";
+
+  // Обновить таймер на клиенте
+  document.getElementById("timer_text").textContent = Timer.formatTime(t.currentSeconds);
+
+  // Очистить классы бара и обводку карточки
+  card.classList.remove('border-warning', 'border-success', 'border-danger', 'border-2', 'border-opacity-50');
+  bar.classList.remove('bg-warning', 'bg-success', 'bg-danger');
+
+  // Получить текущее состояние тренировки (этап) 'prep' | 'train' | 'overtrain'
+  let phase = t.getPhase();
+
+  // В зависимости от состояние тренировки, становить задний фон прогрес бара и обводку карточки
+  if(phase === 'prep'){
+    bar.classList.add("bg-warning");
+    card.classList.add('border-warning', 'border-2', 'border-opacity-50')
+  }else if (phase === 'train'){
+    bar.classList.add("bg-success");
+    card.classList.add('border-success', 'border-2', 'border-opacity-50')
+  }else{
+    bar.classList.add("bg-danger");
+    card.classList.add('border-danger', 'border-2', 'border-opacity-50')
+  }
+}
+
+
+/**
+ * Позиционирует две разделительные линии на шкале прогресс-бара — они
+ * отмечают границы между фазами "подготовка/тренировка" и
+ * "тренировка/перетренированность", в процентах от общей длительности таймера.
+ *
+ * @category update
+ */
+function updateBarLine(){
+  const stepPercent = 100 / timer.totalSeconds;
+  document.getElementById('line-first').style.left = (stepPercent * timer.prepSeconds) + '%';
+  document.getElementById('line-second').style.left = (stepPercent * (timer.prepSeconds + timer.trainSeconds)) + '%';
+}
+
+
+/**
+ * Обновляет счётчик "Выполнено сетов" в шапке — отображает
+ * общее количество выполненных сетов за сессию.
+ *
+ * @category update
+ */
+function updateSetCount(){
+  document.getElementById("totalSets").textContent = session.totalSets;
+}
+
+
+/**
+ * Обновляет карточку активного упражнения — фото, название, поля ввода
+ * повторений/веса, степпер сетов, счётчик позиции ("N / M") и точки-навигацию
+ * внизу карточки. Точки красятся по статусу: зелёная — есть хотя бы 1 сет,
+ * синяя — текущее активное упражнение, серая — ещё не начато.
+ *
+ * @category update
+ */
+function updateCard() {
   // Айдишник активного упражнения
   const id = session.activeExerciseId
   // Активное упражнения
@@ -1030,178 +1335,71 @@ function renderCard() {
   document.getElementById('ccDots').innerHTML = dotsHtml;
 }
 
-// Карточка итогов тренировки
-// Временное решение пока нету стиля карточки
-function renderCompletedCart(){
-  
+
+/**
+ * Обновляет карточку итогов тренировки на странице финиша — время старта/конца,
+ * длительность, количество сетов и уникальных упражнений, поднятый вес,
+ * комментарий и оценку сложности.
+ *
+ * @category update
+ */
+function updateCompletedCart(){
   let ex = session.completedWorkout
-  // Время  начала тренировки
   document.getElementById("cardCompletedStart").textContent = ex.dateStart ? ex.dateStart.toLocaleTimeString('ru-RU') : "00:00:00";
-  // Время завершения тренировки
   document.getElementById("cardCompletedEnd").textContent = ex.dateEnd ? ex.dateEnd.toLocaleTimeString('ru-RU') : "00:00:00";
-  // Продолжытельность тренировки
   document.getElementById("cardCompletedDuration").textContent = ex.duration ? Timer.formatTime(Math.floor(ex.duration / 1000)) : "00:00:00";
-  // Количество выполненных сетов
   document.getElementById("cardCompletedSetsTotal").textContent = ex.countSet;
-  // Количество уникальных упражнений
   document.getElementById("cardCompletedExTotal").textContent = ex.countUniqueExercises;
-  // Поднято веса
   document.getElementById("cardCompletedVolume").textContent = ex.totalWeightLifted + 'кг';
-  // КОментарий тренировки cardCompletedComment
   document.getElementById("cardCompletedComment").textContent = ex.comment;
-  // бщая оценка
   document.getElementById("cardCompletedScore").value = ex.complexityAssessment;
   document.getElementById("cardCompletedScoreBadge").textContent = ex.complexityAssessment;
 
 }
 
 
-// Кнопки переключения вида: обновить, установить активное отображения
+/**
+ * Переключает видимость таблицы/списка/карточки в зависимости от текущего
+ * выбранного вида (session.view). Блоки скрываются также, если пользователь
+ * не на главной странице (session.pageWiew !== 'main').
+ *
+ * @category update
+ */
 function updateViewVisibility(){
   const isMainPage = session.pageWiew === 'main';
-
   document.getElementById("tableView").classList.toggle("d-none", !isMainPage || session.view !== 'table')
   document.getElementById("listView").classList.toggle("d-none", !isMainPage || session.view !== 'list')
   document.getElementById("carouselView").classList.toggle("d-none", !isMainPage || session.view !== 'carousel')
 }
 
 
-// Кнопки переключения вида: обработка нажатия
-// Меняем глобальное состояния отображения setView, и render будет с учетом этого состояния
-document.getElementById("viewTable").addEventListener("change", () => {session.setView("table"); render();})
-document.getElementById("viewList").addEventListener("change", () => {session.setView("list"); render();})
-document.getElementById("viewCarousel").addEventListener("change", () => {session.setView("carousel"); render();})
+/**
+ * Обновляет доступность кнопок старт/пауза/стоп и текст кнопки старта,
+ * основываясь только на текущем состоянии: запущен ли таймер сейчас
+ * (timer.isRunning()) и был ли уже первый старт (dateStart !== null).
+ * Не знает, какая кнопка вызвала обновление — просто каждый раз заново
+ * отражает актуальный факт.
+ *
+ * @category update
+ */
+function updateTimerControls(){
+  let running = timer.isRunning();
+  let alreadyStarted = session.completedWorkout.dateStart !== null;
 
-
-// Кнопка переключения тренировки: обработка нажатия
-// Тренировок может быть много, все кнопки находяться в контейнере workoutSwitcher
-// В поле data-workout-id указан айдишника тренировки
-// setActiveWorkoutByid меняет глобальное состояние сесии и заменяет тренировки
-// Ренедеринг происходит с учетом состояния тренировки
-document.getElementById("workoutSwitcher").addEventListener("change", (event) => {
-  if(!event.target.classList.contains("btn-check")){return;}
-  session.setActiveWorkoutByid(event.target.dataset.workoutId);
-  render();
-})
-
-
-// Кнопка, вперед и задад для карточки: обработка нажатия
-// setPrevIdExercise -  берет слудующее упражнения со списка
-// setNextIdExercise - берет предыдущее упражнения со списка
-// Логика мены упражнения не простая, нужно взять текущее упражнения, найти его порядковый номер, дальше найти слуд или пред
-// получить id упражнения и сделать его активным упражненеим, также котроль выхода за границы
-document.getElementById("ccPrev").addEventListener("click", () => {session.setPrevIdExercise(); render();})
-document.getElementById("ccNext").addEventListener("click", () => {session.setNextIdExercise(); render();})
-
-
-// Кнопка, точки в карточке: обработка нажатия
-// Слушаем контейнер, проверяем кнопки с полем data-id (айдишник упражнения)
-// Меняем глобальное состояние айдишника активной тренировки
-// Рендеренг будет с учетом айдишника активной тренировки
-document.getElementById("ccDots").addEventListener("click", (event) => {
-  let dot = event.target.closest("button[data-id]");
-  let id = Number(dot.dataset.id);
-  // Если нажали на кнопку текущего упражнения, ничего не делать
-  if(session.activeExerciseId === id) return;
-  session.activeExerciseId = id;
-  render();
-})
-
-
-// Кнопка старт: обработка события
-document.getElementById('start_timer').addEventListener('click', () => {
-  // Заблокировать кнопку старта
-  document.getElementById('start_timer').setAttribute('disabled', 'true')
-  // Разблокировать кнопку паузы
-  document.getElementById('pause_timer').removeAttribute('disabled')
-  // Разблокировать кнопку финиша
-  document.getElementById('stop_timer').removeAttribute('disabled')
-  // Установить значения старт
-  document.getElementById('btnStartLabel').textContent = "Старт"
-  // Записать время начала тренировки, одноразовая команда
-  session.completedWorkout.setDateStart();
-  // Запуск таймера
-  timer.start()
-
-});
-
-
-// Кнопка пауза: обработка события
-document.getElementById('pause_timer').addEventListener('click', () => {
-  // Разблокировать кнопку старта
-  document.getElementById('start_timer').removeAttribute('disabled')
-  // Заблокировать кнопку паузы
-  document.getElementById('pause_timer').setAttribute('disabled', 'true')
-  // Кнопку старт, заменить на продолжыть
-  document.getElementById('btnStartLabel').textContent = "Продолжить"
-  // Ставим таймер на паузу
-  timer.pause();
-});
-
-
-// Кнопка стоп/финиш: обработка события
-document.getElementById('stop_timer').addEventListener('click', () => {
-  // Установить значения старт
-  document.getElementById('btnStartLabel').textContent = "Старт"
-  // Заблокировать кнопку старта
-  document.getElementById('start_timer').setAttribute('disabled', 'true')
-  // Заблокировать кнопку Паузы
-  document.getElementById('pause_timer').setAttribute('disabled', 'true')
-  // Заблокировать кнопку финиша
-  document.getElementById('stop_timer').setAttribute('disabled', 'true')
-  // Остановить таймер
-  timer.stop();
-  timer.onTick(timer); // обновить экран сразу (иначе останется последнее значение до следующего тика)
-  // Расчитать итоговые показатели дренировки
-  session.completedWorkout.calculateTotal();
-  // Переключить страницу на итоговою
-  // session.pageWiew = session.pageWiew === 'main' ? 'end' : 'main';
-  session.pageWiew = 'end';
-  render();
-
-});
-
-// Обработчки редактированя поля воода для числа
-function handleFieldChange(event){
-  let target = event.target;
-  // Если в теге есть моле name с weight или reps
-  if(target.name !== "weight" && target.name !== "reps") return;
-
-  // Получаем айдишник упражнения
-  let id = Number(target.dataset.id)
-
-  // Присваиваем новое значения
-  if(target.name === "weight"){session.setWeight(id, Number(target.value))}
-  if(target.name === "reps"){session.setReps(id, Number(target.value))}
+  document.getElementById('start_timer').disabled = running;
+  document.getElementById('pause_timer').disabled = !running;
+  document.getElementById('stop_timer').disabled = !running;
+  document.getElementById('btnStartLabel').textContent = alreadyStarted ? "Продолжить" : "Старт";
 }
 
-document.getElementById("tableBody").addEventListener("change", handleFieldChange);
-document.getElementById("listView").addEventListener("change", handleFieldChange);
-document.getElementById("ccFieldsWrapForEvent").addEventListener("change", handleFieldChange);
 
-
-// Обработчки увеличения или уменьшения сетов
-function handleSetsClick(event){
-  // найти кнопку на которую нажали
-  let btn = event.target.closest("button[data-action]");
-  // Если нету кнопки значит нажали на что то другое
-  if (!btn) return;
-  // Получить айдишник упражнения
-  let id = Number(btn.dataset.id);
-  // Если значения атрибуду action это plus значит + 1 к сету, иначе -1
-  let delta = btn.dataset.action === 'plus' ? 1 : -1;
-  // Изменяем кол сетов в классе
-  session.changeSets(id, delta)
-  render();
-}
-
-document.getElementById('tableBody').addEventListener('click', handleSetsClick);
-document.getElementById('listView').addEventListener('click', handleSetsClick);
-document.getElementById('ccStepperWrap').addEventListener('click', handleSetsClick);
-
-// Переключатель страницы, тренировка и итоги тренировки
-// Какой то таг, первый раз не работае а потом начинает работать
-// Управляет видимостью двух "страниц": main (тренировка) и end (итоги)
+/**
+ * Переключает видимость между двумя "страницами" приложения — тренировкой
+ * (таймер и переключатель вида) и итогами (карточка итогов, тепловая карта,
+ * таблица выполненных упражнений, кнопка сохранения) — на основе session.pageWiew.
+ *
+ * @category update
+ */
 function updatePageVisibility(){
   const isMainPage = session.pageWiew === 'main';
 
@@ -1217,17 +1415,16 @@ function updatePageVisibility(){
   document.getElementById("BtnCompletedView").classList.toggle("d-none", isMainPage);
 }
 
-/*
-document.getElementById("swithPage").addEventListener("click", () => {
-  session.pageWiew = session.pageWiew === 'main' ? 'end' : 'main';
-  render();
-})
-*/
 
-// Позунок сложности тренировки
-function renderScore(event){
-  // Значения шкалы от 1 до 100
-  let value = Number(event.target.value)
+/**
+ * Обновляет бейдж оценки сложности тренировки — цвет зависит от значения:
+ * зелёный (до 30), жёлтый (31–60), красный (выше 60).
+ *
+ * @category update
+ */
+function updateComplexityBadge(){
+  // Текущая оценка сложности
+  let value = session.completedWorkout.complexityAssessment;
   // Бейдж, оценка справа от скалы
   let badge = document.getElementById('cardCompletedScoreBadge');
 
@@ -1243,73 +1440,185 @@ function renderScore(event){
   badge.classList.remove('text-bg-success', 'text-bg-warning', 'text-bg-danger');
   // Установить новый цвет
   badge.classList.add(styleBadge)
-  // Сохранить оценнку тренировки
-  session.completedWorkout.setComplexityAssessment(Number(value))
+  
 }
 
-// updateDifficultyBadge Изменения ползунка, общей сложности стренировки
-document.getElementById("cardCompletedScore").addEventListener("change", renderScore)
 
-// Создание графика активности за полслежние пол года
-function renderHeatmap(){
-  let heatmapMonths = [
-    { label: 'Апр', days: 30, active: [2,3,6,9,10,13,17,20,24,27] },
-    { label: 'Май', days: 31, active: [1,4,5,8,11,15,18,19,22,25,29] },
-    { label: 'Июн', days: 30, active: [2,3,7,10,14,17,21,24,28] },
-    { label: 'Июл', days: 31, active: [1,2,5,8,9,12,16,19,23,26,30,31] },
-    { label: 'Авг', days: 31, active: [3,4,7,11,14,18,21,25,28] },
-    { label: 'Сен', days: 16, active: [1,2,5,8,9,12,15] }
-  ];
+// ════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+//  5. ОБРАБОТЧИКИ СОБЫТИЙ (ON) 
+// ════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 
-  let container = document.getElementById("activityHeatmap");
-
-  let html = '';
-  for(let i = 0; i < heatmapMonths.length; i++){
-    // Создать строку
-    html += `<div class="heatmap-row"><div class="heatmap-label">${heatmapMonths[i].label}</div><div class="heatmap-cells">`;
-    for(let j = 1; j <= heatmapMonths[i].days; j++){
-      let isActive = heatmapMonths[i].active.includes(j);
-      // ДОбавить квартратич с учетом активный он или нет
-      html += `<div class="heatmap-cell${isActive ? ' active' : ''}" title="${heatmapMonths[i].label}, день ${j}"></div>`;
-
-    }
-    html += `</div></div>`;
-  }
-
-  container.innerHTML = html;
-  document.getElementById('activityTotalCount').textContent = 155;
-
-
+/**
+ * Реагирует на переключение активной тренировки в контейнере workoutSwitcher.
+ * Игнорирует клики не по btn-check элементам (например, по обёртке контейнера).
+ * Id новой тренировки берётся из data-workout-id нажатой кнопки.
+ *
+ * @category handler
+ * @param {Event} event - событие change от контейнера workoutSwitcher
+ */
+function onWorkoutChange(event){
+  if(!event.target.classList.contains("btn-check")){return;}
+  session.setActiveWorkoutByid(event.target.dataset.workoutId);
+  render();
 }
 
-// Слушаем поле воода коментария тренировки
-// Работает так, пока пользователь вводит, мы сбрасываем обработчки, как только он остановился
-// ждем секунду и бьерем значения
+
+/**
+ * Реагирует на клик по точке-навигации в карточке упражнения — переключает
+ * активное упражнение на то, чей id указан в data-id нажатой точки.
+ * Использует closest(), чтобы поймать клик даже по вложенным элементам
+ * внутри кнопки-точки. Если кликнули по уже активной точке — ничего не делает.
+ *
+ * @category handler
+ * @param {Event} event - событие click от контейнера ccDots
+ */
+function onDotClick(event){
+  let dot = event.target.closest("button[data-id]");
+  let id = Number(dot.dataset.id);
+  // Если нажали на кнопку текущего упражнения, ничего не делать
+  if(session.activeExerciseId === id) return;
+  session.activeExerciseId = id;
+  render();
+}
+
+
+/**
+ * Реагирует на нажатие кнопки "Старт" — фиксирует время начала тренировки
+ * (только при первом нажатии, повторные вызовы setDateStart игнорируются),
+ * запускает таймер и обновляет состояние кнопок.
+ *
+ * @category handler
+ */
+function onStartClick(){
+  session.completedWorkout.setDateStart();
+  timer.start()
+  updateTimerControls()
+}
+
+
+/**
+ * Реагирует на нажатие кнопки "Пауза" — останавливает таймер
+ * (без сброса currentSeconds) и обновляет состояние кнопок.
+ *
+ * @category handler
+ */
+function onPauseClick(){
+  timer.pause();
+  updateTimerControls()
+}
+
+
+/**
+ * Реагирует на нажатие кнопки "Финиш" — останавливает и сбрасывает таймер,
+ * досчитывает итоговые показатели тренировки, переключает страницу на итоги
+ * и запускает полную перерисовку.
+ *
+ * @category handler
+ */
+function onStopClick(){
+  timer.stop();
+  // обновить экран сразу (иначе останется последнее значение до следующего тика)
+  timer.onTick(timer); 
+  session.completedWorkout.calculateTotal();
+  session.pageWiew = 'end';
+  updateTimerControls()
+  render();
+}
+
+
+/**
+ * Реагирует на изменение поля "повторения" или "вес" у упражнения —
+ * определяет, какое именно поле изменилось, по его атрибуту name,
+ * и сохраняет новое значение в session. Игнорирует изменения других полей
+ * внутри того же контейнера (делегирование события с фильтром по name).
+ *
+ * @category handler
+ * @param {Event} event - событие change от контейнера с полями упражнения
+ */
+function onExerciseValueChange(event){
+  let target = event.target;
+  if(target.name !== "weight" && target.name !== "reps") return;
+
+  let id = Number(target.dataset.id)
+
+  if(target.name === "weight"){session.setWeight(id, Number(target.value))}
+  if(target.name === "reps"){session.setReps(id, Number(target.value))}
+}
+
+
+/**
+ * Реагирует на клик по кнопкам степпера "+1"/"-1" сета — определяет
+ * направление изменения по атрибуту data-action ("plus"/"minus") нажатой
+ * кнопки, используя closest() для попадания даже по вложенной иконке.
+ * Игнорирует клики не по кнопкам степпера.
+ *
+ * @category handler
+ * @param {Event} event - событие click от контейнера со степпером
+ */
+function onSetsClick(event){
+  let btn = event.target.closest("button[data-action]");
+  if (!btn) return;
+
+  let id = Number(btn.dataset.id);
+  let delta = btn.dataset.action === 'plus' ? 1 : -1;
+  session.changeSets(id, delta)
+  render();
+}
+
+
+/**
+ * Реагирует на изменение ползунка общей сложности тренировки —
+ * сохраняет новое значение в session и обновляет цвет/текст бейджа.
+ *
+ * @category handler
+ * @param {Event} event - событие change от ползунка cardCompletedScore
+ */
+function onComplexityChange(event){
+  session.completedWorkout.setComplexityAssessment(Number(event.target.value))
+  updateComplexityBadge()
+}
+
+
+/**
+ * Реагирует на ввод текста в поле комментария тренировки, с debounce
+ * в 1 секунду — при каждом новом символе сбрасывает предыдущий таймер
+ * и запускает новый, чтобы сохранение в session срабатывало только
+ * после того, как пользователь перестал печатать.
+ *
+ * @category handler
+ * @param {Event} event - событие input от поля cardCompletedComment
+ */
 let timeoutId;
-document.getElementById("cardCompletedComment").addEventListener("input", (event)=>{
+function onCommentInput(event){
   clearTimeout(timeoutId);
-
   timeoutId = setTimeout(() => {
     let commentText = event.target.value;
-    console.log("Получено значение:", commentText);
-    // Сохранить комментрий тренировки
     session.completedWorkout.setComment(commentText);
   }, 1000);
-})
+}
 
-// Обработка ввода оценки и комментрия для кадого упражнения
-// Важно ряботает через порядковый номер !!! так как упражнения может быть несколько!!!
-function callbackTableCompletedBody(event){
+
+/**
+ * Реагирует на изменение оценки сложности или комментария у конкретного
+ * выполненного подхода в таблице итогов.
+ *
+ * WARNING: работает через порядковый номер (data-index), а не через id
+ * упражнения — одно и то же упражнение может встречаться в списке
+ * несколько раз (несколько подходов), поэтому только позиция в массиве
+ * session.completedWorkout.exercise однозначно определяет нужную запись.
+ *
+ * @category handler
+ * @param {Event} event - событие change от таблицы tableCompletedBody
+ */
+function onCompletedExerciseChange(event){
   let target = event.target;
-  // Если в теге есть моле name с weight или reps
   if(target.name !== "complatedExerciseScore" && target.name !== "complatedExerciseComent") return;
-  // порядоковый номер выполненого упражнения
+
   let index = Number(target.dataset.index)
   let value = null;
-  // Найти тренировку в логировании
+
   let exercise = session.completedWorkout.exercise[index]
 
-  // Если ввели оценку упражнения
   if(target.name === "complatedExerciseScore"){
     value = Number(target.value)
     exercise.setComplexityAssessment(value);
@@ -1317,53 +1626,97 @@ function callbackTableCompletedBody(event){
     value = target.value
     exercise.setComment(value)
   }
-  
-
 }
 
-document.getElementById('tableCompletedBody').addEventListener("change", callbackTableCompletedBody)
 
-// ЛОгика сохранения данных
+/**
+ * Реагирует на нажатие кнопки "Сохранить тренировку" — сериализует
+ * session.completedWorkout в чистый JSON-объект и отправляет на сервер
+ * через google.script.run. Флаг savintStatus блокирует повторную отправку
+ * при повторных нажатиях (например, если пользователь кликнет несколько раз
+ * до ответа сервера).
+ *
+ * @category handler
+ */
 let savintStatus = false
-document.getElementById("saveWorkoutBtn").addEventListener('click', ()=>{
+function onSaveWorkoutClick(){
   if (!savintStatus){
-    // Заблокировать повторное сохранения
     savintStatus=true;
-    // Переменные класса преобразовать в словарь для отправки
     const payload = JSON.parse(JSON.stringify(session.completedWorkout));
 
     google.script.run
     .withSuccessHandler(function(response) {})
     .withFailureHandler(function(err) {console.error('Ошибка: ' + err.message);})
-    .saveExecution3(payload);
+    .seve_data_from_client(payload);
   }
-  
   render();
-})
+}
 
-/** Главная функция — вызывайте её после ЛЮБОГО изменения store */
+
+// Переключение активной тренировки
+document.getElementById("workoutSwitcher").addEventListener("change", onWorkoutChange)
+
+// Переключение вида отображения: таблица / список / карточка
+document.getElementById("viewTable").addEventListener("change", () => {session.setView("table"); render();})
+document.getElementById("viewList").addEventListener("change", () => {session.setView("list"); render();})
+document.getElementById("viewCarousel").addEventListener("change", () => {session.setView("carousel"); render();})
+
+// Навигация "Пред."/"След." в карточке упражнения
+document.getElementById("ccPrev").addEventListener("click", () => {session.setPrevIdExercise(); render();})
+document.getElementById("ccNext").addEventListener("click", () => {session.setNextIdExercise(); render();})
+
+// Точки-навигация внизу карточки
+document.getElementById("ccDots").addEventListener("click", onDotClick)
+
+// Кнопки управления таймером: старт / пауза / стоп
+document.getElementById('pause_timer').addEventListener('click', onPauseClick);
+document.getElementById('start_timer').addEventListener('click', onStartClick);
+document.getElementById('stop_timer').addEventListener('click', onStopClick);
+
+// Поля reps/weight упражнения — таблица, список, карточка
+document.getElementById("tableBody").addEventListener("change", onExerciseValueChange);
+document.getElementById("listView").addEventListener("change", onExerciseValueChange);
+document.getElementById("ccFieldsWrapForEvent").addEventListener("change", onExerciseValueChange);
+
+// Степпер сетов "+1"/"-1" — таблица, список, карточка
+document.getElementById('tableBody').addEventListener('click', onSetsClick);
+document.getElementById('listView').addEventListener('click', onSetsClick);
+document.getElementById('ccStepperWrap').addEventListener('click', onSetsClick);
+
+// Ползунок общей сложности тренировки
+document.getElementById("cardCompletedScore").addEventListener("change", onComplexityChange)
+
+// Поле комментария тренировки
+document.getElementById("cardCompletedComment").addEventListener("input", onCommentInput)
+
+// Таблица итогов: оценка и комментарий каждого подхода
+document.getElementById('tableCompletedBody').addEventListener("change", onCompletedExerciseChange)
+
+// Кнопка сохранения тренировки
+document.getElementById("saveWorkoutBtn").addEventListener('click', onSaveWorkoutClick)
+
+
+/**
+ * Главная функция перерисовки — вызывается после любого изменения session.
+ * Последовательно вызывает все render/update-функции, чтобы весь интерфейс
+ * (таймер, таблицы, карточка, видимость блоков) синхронизировался
+ * с актуальным состоянием.
+ *
+ * @category render
+ */
 function render() {
-  renderBarLine();
-  renderSetCount();
+  updateBarLine();
+  updateSetCount();
   renderTable();
   renderList();
-  renderCard();
+  updateCard();
   renderWorkoutSwitcher();
   updateViewVisibility();
   renderTree();
   renderCompletedTable();
-  renderCompletedCart();
+  updateCompletedCart();
   renderHeatmap();
   updatePageVisibility();
-
-  // updateViewVisibility и updatePageVisibility ебала запутанная, нужно разобраться как нормально это делать
 }
-
-/*
-
-
-
-
-*/
 
 </script>

@@ -1,14 +1,23 @@
-function ver2() {
+// Добавление пользовательского меню при открытии таблицы
+function onOpen() {
+  SpreadsheetApp.getUi()
+    .createMenu('💪 Menu')
+    .addItem('Тренировка', 'open_training_modal')
+    .addToUi();
+}
+
+// Открыть модальное окно тренировки
+function open_training_modal() {
   var html = HtmlService.createHtmlOutputFromFile('prod/training-client').setWidth(1400).setHeight(1200);
   SpreadsheetApp.getUi().showModalDialog(html, "v2");
 }
 
-// Функцыя возращает список тренировок для клиента
-// ВАЖНО АЙДИШНИКИ ДОЛЖНЫ БЫТЬ УНИКАЛЬНЫЕ!!!
+// Список тренировок для клиента
 function get_data_from_server(){
+  // ВАЖНО АЙДИШНИКИ ДОЛЖНЫ БЫТЬ УНИКАЛЬНЫЕ!!!
   return [{
-    name: "Основная",
     id: "main",
+    name: "Основная",
     archived: false,
     exercises: [{
       id: 1,
@@ -100,8 +109,8 @@ function get_data_from_server(){
       photo_large: "https://lh3.googleusercontent.com/d/1LkonQXZY-rTO1C6Zhy8EDTGjGPZzCUdX"
     }]
   },{
-    name: "Дополнительная",
     id: "dop",
+    name: "Дополнительная",
     archived: false,
     exercises: [{
       id: 1,
@@ -136,16 +145,15 @@ function get_data_from_server(){
   }]
 }
 
-
-function saveExecution3(data){
-  // var sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("log"); execution_history
+// Сохранить данные в таблицу, полученные от клиента
+function seve_data_from_client(data){
   var ss = SpreadsheetApp.getActiveSpreadsheet();
   var workout_history_sheet = ss.getSheetByName('workout_history');
   var execution_history_sheet = ss.getSheetByName('execution_history');
 
   let id = getNextId(1, workout_history_sheet)
 
-  // Сохранить историю тренировки
+  // Сохранить выполненую тренировку
   workout_history_sheet.appendRow([
     id, 
     new Date(data.dateStart), 
@@ -158,6 +166,7 @@ function saveExecution3(data){
     data.comment
     ])
 
+  // Сохранить историю выполненых упражнений
   let executions = [];
   idex = getNextId(1, execution_history_sheet)
   for(let i = 0; i < data.exercise.length; i++){
@@ -174,8 +183,6 @@ function saveExecution3(data){
     ])
   }
 
-  console.log(executions)
-
   if(executions.length > 0){
     let startRow = execution_history_sheet.getLastRow() + 1
     // Получаем список всех значений с колонки с айдишником (строка_начала, колонка_начала, количество_строк, количество_колонок)
@@ -183,7 +190,8 @@ function saveExecution3(data){
   }
 }
 
-// Передаем ссылку на обьект листа и айдишник колонки где id
+// Получить новый адишник для записи
+// На основе ссылки на лист и порядкового номера колонки
 function getNextId(idColmn, sheet){
 
   // Номер строки до которой есть данные
