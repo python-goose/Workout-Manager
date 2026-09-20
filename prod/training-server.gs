@@ -15,135 +15,164 @@ function open_training_modal() {
 // Список тренировок для клиента
 function get_data_from_server(){
   // ВАЖНО АЙДИШНИКИ ДОЛЖНЫ БЫТЬ УНИКАЛЬНЫЕ!!!
-  return [{
-    id: "main",
-    name: "Основная",
-    archived: false,
-    exercises: [{
-      id: 1,
-      name: "Школьная разминка всего тела",
-      reps: 1,
-      weight: 0,
-      time: 180,
-      photo_small: "https://lh3.googleusercontent.com/d/1Dp2CSTM_cT1NwqJMmHrtBjFCGKdPRDp4",
-      photo_large: "https://lh3.googleusercontent.com/d/1Dp2CSTM_cT1NwqJMmHrtBjFCGKdPRDp4"
-    },{
-      id: 2,
-      name: "Приседания",
-      reps: 15,
-      weight: 0,
-      time: 30,
-      photo_small: "https://lh3.googleusercontent.com/d/1uifSlNPIF6gR-1X1j8Fu0v7SX3yDqmmJ",
-      photo_large: "https://lh3.googleusercontent.com/d/1uifSlNPIF6gR-1X1j8Fu0v7SX3yDqmmJ"
-    },{
-      id: 3,
-      name: "Классические подъёмы на носки стоя",
-      reps: 25,
-      weight: 0,
-      time: 25,
-      photo_small: "https://lh3.googleusercontent.com/d/1Vwm4yETb2U-vWpvtivQnMn1JzevJWa1x",
-      photo_large: "https://lh3.googleusercontent.com/d/1Vwm4yETb2U-vWpvtivQnMn1JzevJWa1x"
-    },{
-      id: 4,
-      name: "Классические подъёмы на носки стоя",
-      reps: 25,
-      weight: 10,
-      time: 25,
-      photo_small: "https://lh3.googleusercontent.com/d/1Vwm4yETb2U-vWpvtivQnMn1JzevJWa1x",
-      photo_large: "https://lh3.googleusercontent.com/d/1Vwm4yETb2U-vWpvtivQnMn1JzevJWa1x"
-    },{
-      id: 5,
-      name: "Планка на локтях (или лодочка)",
-      reps: 1,
-      weight: 0,
-      time: 30,
-      photo_small: "https://lh3.googleusercontent.com/d/1cjCQbqTffmPeA-uccWD7gBHwDlkUPa5i",
-      photo_large: "https://lh3.googleusercontent.com/d/1cjCQbqTffmPeA-uccWD7gBHwDlkUPa5i"
-    },{
-      id: 6,
-      name: "Стойка на руках у стены",
-      reps: 1,
-      weight: 0,
-      time: 30,
-      photo_small: "https://lh3.googleusercontent.com/d/1Xp7R_PkGiZwhIKwykRH1oc2VJ5pAn0Fz",
-      photo_large: "https://lh3.googleusercontent.com/d/1Xp7R_PkGiZwhIKwykRH1oc2VJ5pAn0Fz"
-    },{
-      id: 7,
-      name: "Pike Push-ups / Уголок",
-      reps: 10,
-      weight: 0,
-      time: 25,
-      photo_small: "https://lh3.googleusercontent.com/d/1_8oWZb73iMuLcaTZFVnbiC-wzkd5Gm3m",
-      photo_large: "https://lh3.googleusercontent.com/d/1_8oWZb73iMuLcaTZFVnbiC-wzkd5Gm3m"
-    },{
-      id: 8,
-      name: "Жим фитнес резинки стоя",
-      reps: 15,
-      weight: 15,
-      time: 30,
-      photo_small: "https://lh3.googleusercontent.com/d/1cjr34HxQhIuh2VUbaUqToQiKx8tpnDHU",
-      photo_large: "https://lh3.googleusercontent.com/d/1cjr34HxQhIuh2VUbaUqToQiKx8tpnDHU"
-    },{
-      id: 9,
-      name: "Жим фитнес резинки стоя",
-      reps: 15,
-      weight: 25,
-      time: 30,
-      photo_small: "https://lh3.googleusercontent.com/d/1cjr34HxQhIuh2VUbaUqToQiKx8tpnDHU",
-      photo_large: "https://lh3.googleusercontent.com/d/1cjr34HxQhIuh2VUbaUqToQiKx8tpnDHU"
-    },{
-      id: 10,
-      name: "Французский жим стоя с резинкой",
-      reps: 15,
-      weight: 15,
-      time: 30,
-      photo_small: "https://lh3.googleusercontent.com/d/1YraXc4W1o_CcSvLyDO5MBIKOsUyrII3H",
-      photo_large: "https://lh3.googleusercontent.com/d/1YraXc4W1o_CcSvLyDO5MBIKOsUyrII3H"
-    },{
-      id: 11,
-      name: "Трапеция с гантелями (Шраги)",
-      reps: 20,
-      weight: 20,
-      time: 30,
-      photo_small: "https://lh3.googleusercontent.com/d/1LkonQXZY-rTO1C6Zhy8EDTGjGPZzCUdX",
-      photo_large: "https://lh3.googleusercontent.com/d/1LkonQXZY-rTO1C6Zhy8EDTGjGPZzCUdX"
-    }]
-  },{
-    id: "dop",
-    name: "Дополнительная",
-    archived: false,
-    exercises: [{
-      id: 1,
-      name: "Планка на локтях (или лодочка)",
-      reps: 1,
-      weight: 0,
-      time: 30,
-      photo_small: "https://lh3.googleusercontent.com/d/1cjCQbqTffmPeA-uccWD7gBHwDlkUPa5i",
-      photo_large: "https://lh3.googleusercontent.com/d/1cjCQbqTffmPeA-uccWD7gBHwDlkUPa5i"
-    },{
-      id: 2,
-      name: "Стойка на руках у стены",
-      reps: 1,
-      weight: 0,
-      time: 30,
-      photo_small: "https://lh3.googleusercontent.com/d/1Xp7R_PkGiZwhIKwykRH1oc2VJ5pAn0Fz",
-      photo_large: "https://lh3.googleusercontent.com/d/1Xp7R_PkGiZwhIKwykRH1oc2VJ5pAn0Fz"
-    }]
-  },{
-    name: "Еще",
-    id: "no",
-    archived: true,
-    exercises: [{
-      id: 1,
-      name: "Pike Push-ups / Уголок",
-      reps: 10,
-      weight: 0,
-      time: 25,
-      photo_small: "https://lh3.googleusercontent.com/d/1_8oWZb73iMuLcaTZFVnbiC-wzkd5Gm3m",
-      photo_large: "https://lh3.googleusercontent.com/d/1_8oWZb73iMuLcaTZFVnbiC-wzkd5Gm3m"
-    }]
-  }]
+  /*
+   timer = new Timer(20, 900, 0.2);
+   // пред подготовка, глобальные настроки
+   // время работы, основная тренировка или запущенная
+   // Коофицыент это глоабалная натсройка
+  
+   */
+  return {
+    settings:{
+      prepSeconds: 20, // Количество секунд, перед тренировкой, этап подготовки
+      overtimeFactor: 0.2 // Мультипликатор для перетренерованности
+    },
+    workouts: [
+      {
+      id: "main",
+      name: "Основная",
+      archived: false,
+      time: 900,
+      exercises: [{
+        id: 1,
+        name: "Школьная разминка всего тела",
+        reps: 1,
+        weight: 0,
+        time: 180,
+        photo_small: "https://lh3.googleusercontent.com/d/1Dp2CSTM_cT1NwqJMmHrtBjFCGKdPRDp4",
+        photo_large: "https://lh3.googleusercontent.com/d/1Dp2CSTM_cT1NwqJMmHrtBjFCGKdPRDp4"},
+        {
+        id: 2,
+        name: "Приседания",
+        reps: 15,
+        weight: 0,
+        time: 30,
+        photo_small: "https://lh3.googleusercontent.com/d/1uifSlNPIF6gR-1X1j8Fu0v7SX3yDqmmJ",
+        photo_large: "https://lh3.googleusercontent.com/d/1uifSlNPIF6gR-1X1j8Fu0v7SX3yDqmmJ"},
+        {
+        id: 3,
+        name: "Приседания",
+        reps: 15,
+        weight: 10,
+        time: 30,
+        photo_small: "https://lh3.googleusercontent.com/d/1uifSlNPIF6gR-1X1j8Fu0v7SX3yDqmmJ",
+        photo_large: "https://lh3.googleusercontent.com/d/1uifSlNPIF6gR-1X1j8Fu0v7SX3yDqmmJ"},
+        {
+        id: 4,
+        name: "Классические подъёмы на носки стоя",
+        reps: 25,
+        weight: 0,
+        time: 25,
+        photo_small: "https://lh3.googleusercontent.com/d/1Vwm4yETb2U-vWpvtivQnMn1JzevJWa1x",
+        photo_large: "https://lh3.googleusercontent.com/d/1Vwm4yETb2U-vWpvtivQnMn1JzevJWa1x"},
+        {
+        id: 5,
+        name: "Классические подъёмы на носки стоя",
+        reps: 25,
+        weight: 10,
+        time: 25,
+        photo_small: "https://lh3.googleusercontent.com/d/1Vwm4yETb2U-vWpvtivQnMn1JzevJWa1x",
+        photo_large: "https://lh3.googleusercontent.com/d/1Vwm4yETb2U-vWpvtivQnMn1JzevJWa1x"},
+        {
+        id: 6,
+        name: "Планка на локтях (или лодочка)",
+        reps: 1,
+        weight: 0,
+        time: 30,
+        photo_small: "https://lh3.googleusercontent.com/d/1cjCQbqTffmPeA-uccWD7gBHwDlkUPa5i",
+        photo_large: "https://lh3.googleusercontent.com/d/1cjCQbqTffmPeA-uccWD7gBHwDlkUPa5i"},
+        {
+        id: 7,
+        name: "Стойка на руках у стены",
+        reps: 1,
+        weight: 0,
+        time: 30,
+        photo_small: "https://lh3.googleusercontent.com/d/1Xp7R_PkGiZwhIKwykRH1oc2VJ5pAn0Fz",
+        photo_large: "https://lh3.googleusercontent.com/d/1Xp7R_PkGiZwhIKwykRH1oc2VJ5pAn0Fz"},
+        {
+        id: 8,
+        name: "Pike Push-ups / Уголок",
+        reps: 10,
+        weight: 0,
+        time: 25,
+        photo_small: "https://lh3.googleusercontent.com/d/1_8oWZb73iMuLcaTZFVnbiC-wzkd5Gm3m",
+        photo_large: "https://lh3.googleusercontent.com/d/1_8oWZb73iMuLcaTZFVnbiC-wzkd5Gm3m"},
+        {
+        id: 9,
+        name: "Жим фитнес резинки стоя",
+        reps: 15,
+        weight: 15,
+        time: 30,
+        photo_small: "https://lh3.googleusercontent.com/d/1cjr34HxQhIuh2VUbaUqToQiKx8tpnDHU",
+        photo_large: "https://lh3.googleusercontent.com/d/1cjr34HxQhIuh2VUbaUqToQiKx8tpnDHU"},
+        {
+        id: 10,
+        name: "Жим фитнес резинки стоя",
+        reps: 15,
+        weight: 25,
+        time: 30,
+        photo_small: "https://lh3.googleusercontent.com/d/1cjr34HxQhIuh2VUbaUqToQiKx8tpnDHU",
+        photo_large: "https://lh3.googleusercontent.com/d/1cjr34HxQhIuh2VUbaUqToQiKx8tpnDHU"},
+        {
+        id: 11,
+        name: "Французский жим стоя с резинкой",
+        reps: 15,
+        weight: 15,
+        time: 30,
+        photo_small: "https://lh3.googleusercontent.com/d/1YraXc4W1o_CcSvLyDO5MBIKOsUyrII3H",
+        photo_large: "https://lh3.googleusercontent.com/d/1YraXc4W1o_CcSvLyDO5MBIKOsUyrII3H"},
+        {
+        id: 12,
+        name: "Трапеция с гантелями (Шраги)",
+        reps: 20,
+        weight: 20,
+        time: 30,
+        photo_small: "https://lh3.googleusercontent.com/d/1LkonQXZY-rTO1C6Zhy8EDTGjGPZzCUdX",
+        photo_large: "https://lh3.googleusercontent.com/d/1LkonQXZY-rTO1C6Zhy8EDTGjGPZzCUdX"}
+      ]
+      },
+      {
+        id: "dop",
+        name: "Дополнительная",
+        archived: false,
+        time: 50,
+        exercises: [{
+          id: 1,
+          name: "Планка на локтях (или лодочка)",
+          reps: 1,
+          weight: 0,
+          time: 30,
+          photo_small: "https://lh3.googleusercontent.com/d/1cjCQbqTffmPeA-uccWD7gBHwDlkUPa5i",
+          photo_large: "https://lh3.googleusercontent.com/d/1cjCQbqTffmPeA-uccWD7gBHwDlkUPa5i"
+        },{
+          id: 2,
+          name: "Стойка на руках у стены",
+          reps: 1,
+          weight: 0,
+          time: 30,
+          photo_small: "https://lh3.googleusercontent.com/d/1Xp7R_PkGiZwhIKwykRH1oc2VJ5pAn0Fz",
+          photo_large: "https://lh3.googleusercontent.com/d/1Xp7R_PkGiZwhIKwykRH1oc2VJ5pAn0Fz"
+        }]
+      },
+      {
+        name: "Еще",
+        id: "no",
+        archived: true,
+        time: 10,
+        exercises: [{
+          id: 1,
+          name: "Pike Push-ups / Уголок",
+          reps: 10,
+          weight: 0,
+          time: 25,
+          photo_small: "https://lh3.googleusercontent.com/d/1_8oWZb73iMuLcaTZFVnbiC-wzkd5Gm3m",
+          photo_large: "https://lh3.googleusercontent.com/d/1_8oWZb73iMuLcaTZFVnbiC-wzkd5Gm3m"
+        }]
+      }
+    ]
+  }
 }
+
 
 // Сохранить данные в таблицу, полученные от клиента
 function seve_data_from_client(data){
@@ -215,6 +244,132 @@ function getNextId(idColmn, sheet){
   return id
 }
 
+
+/**
+ * Считает текущую серию тренировок подряд (streak) — сколько дней подряд,
+ * включая сегодня, пользователь занимался без пропусков. Даты читаются
+ * из колонки B листа workout_history.
+ *
+ * @category model
+ * @returns {Number} количество дней подряд (текущая серия + сегодняшний день)
+ */
+function calculateWorkoutStreak(){
+  let ss = SpreadsheetApp.getActiveSpreadsheet();
+  let workoutHistorySheet = ss.getSheetByName("workout_history");
+
+  let lastRow = workoutHistorySheet.getLastRow();
+
+  // Получаем список дат с колонки B
+  let rawDates = workoutHistorySheet.getRange(2, 2, lastRow - 1, 1).getValues();
+
+  // Пропускаем все пустые строки
+  // Записываем в новый список [[]] -> []
+  let dateList = []
+  for(let i = 0; i < rawDates.length; i++){
+    if(rawDates[i][0] !== ''){
+      dateList.push(rawDates[i][0])
+    }
+  }
+
+  // Сортируем список по возрастанию (от старых дат к новым)
+  dateList.sort((a, b) => a - b);
+
+  // Текущая проверяемая дата, стартуем от сегодня
+  let currentCheckDate = new Date()
+  // Количество дней подряд, сегодня по умолчанию 1
+  let streakCount = 1
+
+  // Проходимся по датам, с конца (самые свежие) в начало (самые старые)
+  for(let i = dateList.length - 1; i >= 0; i--){
+
+    // Копируем текущую дату и вычитаем 1 день, так что бы expectedPrevDay остался Date
+    // Проблема: expectedPrevDay.getDate() возвращает число,
+    // и когда первое число месяца -1 будет 0 и всё ломается
+    // Нужно создать "вчерашний день" именно через объект Date, до сравнения
+    let expectedPrevDay = new Date(currentCheckDate);
+    expectedPrevDay.setDate(expectedPrevDay.getDate() - 1);
+
+    if(expectedPrevDay.toDateString() === dateList[i].toDateString()){
+      // Обновляем текущую проверяемую дату на найденный вчерашний день
+      currentCheckDate = dateList[i];
+      // Увеличиваем счётчик
+      streakCount += 1
+    }
+  }
+
+  // Возвращаем текущую серию + сегодняшняя тренировка
+  console.log(streakCount)
+  return streakCount
+}
+
+
+/**
+ * Ищет самую длинную серию тренировок подряд за всё время (без пропусков)
+ * среди дат из колонки B листа workout_history.
+ *
+ * @category model
+ * @returns {Number} длина самой долгой серии дней подряд
+ */
+function findLongestStreak(){
+  let ss = SpreadsheetApp.getActiveSpreadsheet();
+  let workoutHistorySheet = ss.getSheetByName("workout_history");
+
+  let lastRow = workoutHistorySheet.getLastRow();
+
+  // Получаем список дат с колонки B
+  let rawDates = workoutHistorySheet.getRange(2, 2, lastRow - 1, 1).getValues();
+
+  // Пропускаем все пустые строки
+  // Записываем в новый список [[]] -> []
+  let dateList = []
+  for(let i = 0; i < rawDates.length; i++){
+    if(rawDates[i][0] !== ''){
+      dateList.push(rawDates[i][0])
+    }
+  }
+
+  // Сортируем список по возрастанию (от старых дат к новым)
+  dateList.sort((a, b) => a - b);
+
+  // Удалить дуликаты так как это сбивает серию
+  let uniqueDateList = []
+  for(let i = 0; i < dateList.length; i++){
+    if(i === 0 || dateList[i].toDateString() !== dateList[i-1].toDateString()){
+      uniqueDateList.push(dateList[i])
+    }
+  }
+
+  // Number копирует значение при присвоении, поэтому currentStreak
+  // можно спокойно менять внутри цикла без побочных эффектов
+  let currentStreak = 1
+  let longestStreak = 0
+
+  // Проходимся по датам от начала к концу (от старых к новым)
+  for(let i = 0; i < uniqueDateList.length - 1; i++){
+    // Ожидаемый следующий день относительно текущей даты
+    let expectedNextDay = new Date(uniqueDateList[i]);
+    expectedNextDay.setDate(expectedNextDay.getDate() + 1);
+
+    // Сравниваем через toDateString, что бы избежать ситуации 02.08 === 03.09
+    if(expectedNextDay.toDateString() === uniqueDateList[i+1].toDateString()){
+      currentStreak += 1
+    }else{
+      // При прерывании серии сравниваем, набрали ли больше, чем было
+      if(longestStreak < currentStreak) longestStreak = currentStreak;
+      // Счётчик текущей серии нужно сбросить
+      currentStreak = 1
+    }
+  }
+
+  // Проверяем случай, когда самая длинная серия была в самом конце списка
+  if(longestStreak < currentStreak){
+    longestStreak = currentStreak
+  }
+
+  // Возвращаем самую длинную найденную серию
+  console.log(longestStreak)
+  return longestStreak
+}
 
 
 

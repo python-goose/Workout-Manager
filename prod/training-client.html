@@ -348,7 +348,7 @@ class Exercise {
 }
 
 
-/**
+/** ОБНОВИТь ⛔️
  * Создаёт объект тренировки, хранит информацию о тренировке и
  * списке всех упражнений, которые в неё входят (Exercise).
  *
@@ -364,10 +364,11 @@ class Exercise {
  *   уже как готовые экземпляры класса Exercise (не сырые данные)
  */
 class Workout{
-  constructor({id, name, archived, exercises}){
+  constructor({id, name, archived, time, exercises}){
     this.id = id
     this.name = name;
     this.archived = archived;
+    this.time = time;
     this.exercises = [];
 
     for(let i = 0; i < exercises.length; i ++){
@@ -779,7 +780,7 @@ class WorkoutSession {
 }
 
 
-/**
+/** ОБНОВИТЬ!!! ⛔️
  * Таймер тренировки с тремя фазами — подготовка, тренировка, перетренированность
  * (превышение планового времени). Работает через setInterval с шагом в секунду
  * и уведомляет внешний код о каждом тике через callback onTick, который нужно
@@ -801,15 +802,30 @@ class WorkoutSession {
  *   null, пока не подключён снаружи
  */
 class Timer{
-  constructor(prepSeconds, trainSeconds, overtimeFactor){
+  constructor(prepSeconds, overtimeFactor){
     this.prepSeconds = prepSeconds;
-    this.trainSeconds = trainSeconds;
+    this.trainSeconds = null;
     this.overtimeFactor = overtimeFactor;
-    this.totalSeconds = Math.ceil(prepSeconds + trainSeconds + (trainSeconds * overtimeFactor));
+    this.totalSeconds = null;
 
     this.currentSeconds = 0;
     this.intervalId = null;
     this.onTick = null;
+
+    this.isBuild = false
+  }
+
+  // ⛔️
+  // Первый запуск тренировки
+  // Определяеться на основе первой запущеной тренировки,
+  // Мы не знаем сколько времени будет длиться тренировка, пока пользовалеь не выбирет ее и не запустит
+  build(trainSeconds){
+    if(!this.isBuild){
+      this.trainSeconds = trainSeconds;
+      this.totalSeconds = Math.ceil(this.prepSeconds + trainSeconds + (trainSeconds * this.overtimeFactor));
+      this.isBuild = true
+    }
+    
   }
 
   /**
@@ -918,11 +934,11 @@ window.onload = function(){
 }
 
 // Точка запуска приложения
-function on_data_loader(workouts){
+function on_data_loader(config){
   // Создание сесси тренировки
-  session = new WorkoutSession(workouts);
+  session = new WorkoutSession(config.workouts);
   // Создание таймера
-  timer = new Timer(20, 900, 0.2);
+  timer = new Timer(config.settings.prepSeconds, config.settings.overtimeFactor);
   // Повешать отработчки (каждая секунжа)
   timer.onTick = updateTimerCallback;
   // Рендер всех компонентов
@@ -1482,7 +1498,7 @@ function onDotClick(event){
 }
 
 
-/**
+/** ⛔️
  * Реагирует на нажатие кнопки "Старт" — фиксирует время начала тренировки
  * (только при первом нажатии, повторные вызовы setDateStart игнорируются),
  * запускает таймер и обновляет состояние кнопок.
@@ -1491,6 +1507,8 @@ function onDotClick(event){
  */
 function onStartClick(){
   session.completedWorkout.setDateStart();
+  // Расчитать показатели, общей длительности тренировки на основе выбраной тренировки
+  timer.build(session.activeWorkout.time)
   timer.start()
   updateTimerControls()
 }
