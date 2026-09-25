@@ -1,0 +1,37 @@
+<script>
+let session = null;
+let timer = null;
+
+window.onload = function(){
+  google.script.run
+    .withSuccessHandler(on_data_loader)
+    .withFailureHandler(on_data_error)
+    .get_data_from_server_pro()
+}
+
+function on_data_loader(config){
+  session = new WorkoutSession(config.workouts);
+  timer = new Timer(config.settings.prepSeconds, config.settings.overtimeFactor);
+  timer.onTick = updateTimerCallback;
+  render()
+}
+
+function on_data_error(err){
+  document.getElementById("loadStatus").textContent = 'Не получилось загрузить упражнения' + err.message;
+}
+
+function render() {
+  updateBarLine();
+  updateSetCount();
+  renderTable();
+  renderList();
+  updateCard();
+  renderWorkoutSwitcher();
+  updateViewVisibility();
+  renderTree();
+  renderCompletedTable();
+  updateCompletedCart();
+  renderHeatmap();
+  updatePageVisibility();
+}
+</script>

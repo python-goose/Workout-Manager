@@ -1,0 +1,285 @@
+<script>
+// ════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+//  2. УТИЛИТЫ
+// ════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+
+/**
+ * Рекурсивно строит древовидное HTML-представление произвольного значения
+ * (используется для дебаг-панели, чтобы наглядно показать всю структуру session).
+ * Примитивы (число, строка, boolean, null) рисуются как простая строка
+ * "label: значение". Объекты и массивы рисуются как раскрывающийся <details>
+ * с рекурсивно построенными дочерними элементами внутри.
+ *
+ * @category util
+ * @param {*} value - значение для отображения: примитив, массив или объект
+ * @param {String} label - подпись, под которой показывается это значение
+ * @returns {HTMLElement} DOM-элемент (div для примитива, details для объекта/массива)
+ */
+function buildTree(value, label){
+  // Для определенных переменных будет подсказка в названии (summary)
+  let helper = "";
+  if(label === "workouts"){helper = "Список тренировок"}
+  if(label === "exercises"){helper = "Список упражнений"}
+
+  // ====== Базовый случай, когда завершения рекурсии ======
+
+  // Примитивы (число, строка, boolean, null) — рисуются одинаково
+  if(typeof value === "number" || typeof value === "string" || typeof value === "boolean" || value === null){
+    let leaf = document.createElement("div");
+    leaf.textContent = `${label}: ${value}`;
+    return leaf
+  }
+
+  // ====== Рекурсивный случай, когда передаем уменьшенные данные ======
+  // Или объект (ключи) или список (елементы)
+  
+  // Создание тегра details (свертываемый елемент) а summary это его заголовок
+  let node = document.createElement("details");
+  //node.open = true;
+  let summary = document.createElement("summary")
+
+  // Переменная список ? (true, false)
+  let isArray = Array.isArray(value)
+  let keys = null
+
+  // Подпись, summary меняеться в зависимости (списка или обьекта)
+  if(isArray){
+    summary.textContent = `${label}: [${value.length}], ${helper}`;
+    // Спиок индексов [0, 1, 2, ...]
+    keys = value.map((_, i) => i) // 
+  }else{
+    summary.textContent = `${label}: {...}`;
+    // Список ключей ["name", "exercises"...]
+    keys = Object.keys(value) 
+  }
+
+  // Добавить summary в details (заголовок)
+  node.appendChild(summary)
+
+  for(let i = 0; i < keys.length; i++){
+    let key = keys[i];
+    let child = buildTree(value[key], String(key))
+    child.style.marginLeft = "16px"
+    node.appendChild(child)
+  }
+
+  return node;
+}
+
+// ════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+//  3. RENDER
+// ════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+
+/**
+ * Строит HTML-разметку поля ввода числа — используется для полей
+ * "повторения" и "вес" в таблице, списке и карточке упражнения.
+ *
+ * @category render
+ * @param {'reps'|'weight'} name - имя поля, определяет, что именно редактируется
+ * @param {Number} id - id упражнения, к которому относится поле
+ * @param {Number} value - текущее значение поля
+ * @returns {String} HTML-строка с готовым input-элементом
+ */
+function renderInputNumber(name, id, value){
+  return `<input type="number" min="0" class="form-control form-control-sm" name="${name}" data-id="${id}" value="${value}">`
+}
+
+
+/**
+ * Строит HTML-разметку степпера сетов "-1 / N / +1" — используется одинаково
+ * в таблице, списке и карточке упражнения. Кнопки помечены атрибутом
+ * data-action ("plus"/"minus"), по которому обработчик клика определяет,
+ * увеличить или уменьшить количество сетов.
+ *
+ * @category render
+ * @param {Number} id - id упражнения, к которому относится степпер
+ * @param {Number} sets - текущее количество выполненных сетов
+ * @returns {String} HTML-строка с готовым степпером
+ */
+function renderStepperControl(id, sets){
+  return `
+  <div class="btn-group btn-group-sm" role="group">
+    <button class="btn btn-outline-secondary" data-action="minus" data-id="${id}" title="Отменить последний сет"><i class="bi bi-dash"></i>1</button>
+    <span class="btn btn-outline-secondary disabled fw-bold">${sets}</span>
+    <button class="btn btn-success" data-action="plus" data-id="${id}" title="Записать сет"><i class="bi bi-plus"></i>1</button>
+  </div>`;
+}
+
+
+/**
+ * Строит и вставляет в дебаг-панель дерево всего объекта session —
+ * позволяет наглядно видеть текущее состояние приложения целиком.
+ *
+ * @category render
+ */
+function renderTree(){
+  let tree = buildTree(session, "session");
+  let loadStatus = document.getElementById("loadStatus");
+  loadStatus.innerHTML = "";
+  loadStatus.appendChild(tree);
+}
+
+
+/**
+ * Строит переключатель тренировок (кнопки-радио) — по одной кнопке
+ * на каждую неархивированную тренировку. Активной помечается та, что
+ * совпадает с session.activeWorkout.
+ *
+ * @category render
+ */
+function renderWorkoutSwitcher(){
+  let html = ``
+  for(let i = 0; i < session.workouts.length; i++){
+    if(session.workouts[i].archived){continue;}
+    let id = session.workouts[i].id
+    let name = session.workouts[i].name
+    let checked = session.activeWorkout.id === id ? "checked": ""
+    html += `<input id="WorkoutSwitcher-${id}" type="radio" class="btn-check" name="workoutMode" ${checked} data-workout-id="${id}">
+    <label class="btn btn-outline-primary btn-sm" for="WorkoutSwitcher-${id}">${name}</label>`
+  }
+  document.getElementById('workoutSwitcher').innerHTML = html
+}
+
+
+/**
+ * Рисует табличное представление упражнений активной тренировки —
+ * по одной строке на упражнение, с полями reps/weight и степпером сетов.
+ * Выполненные упражнения (sets > 0) подсвечиваются зелёным.
+ *
+ * @category render
+ */
+function renderTable() {
+  let html = '';
+  for (let i = 0; i < session.activeWorkout.exercises.length; i++) {
+    const ex = session.activeWorkout.exercises[i];
+    html += `
+      <tr class="${ex.sets > 0 ? 'table-success' : ''}">
+        <td><img src="${ex.photoSmall}" class="thumb rounded flex-shrink-0" alt="${ex.name}"></td>
+        <td>
+          <div class="fw-semibold">${ex.name}</div>
+          <div class="text-secondary small">${ex.time} сек / подход</div>
+        </td>
+        <td>${renderInputNumber("reps", ex.id, ex.reps)}</td>
+        <td>${renderInputNumber("weight", ex.id, ex.weight)}</td>
+        <td class="text-secondary">${ex.time}с</td>
+        <td>${renderStepperControl(ex.id, ex.sets)}</td>
+      </tr>`;
+  }
+  document.getElementById('tableBody').innerHTML = html;
+}
+
+
+/**
+ * Рисует таблицу итогов — по одной строке на каждый выполненный подход
+ * (session.completedWorkout.exercise), с выбором оценки сложности (1–10)
+ * и полем для комментария к этому подходу.
+ *
+ * @category render
+ */
+function renderCompletedTable() {
+  let html = '';
+  for (let i = 0; i < session.completedWorkout.exercise.length; i++) {
+    const ex = session.completedWorkout.exercise[i];
+    let option = ''
+    for(let j = 1; j <=10; j++){
+      let selected = ''
+      if(ex.complexityAssessment === j) selected = "selected"
+      option += `<option value="${j}" ${selected}>${j}</option>`
+    }
+
+    html += `
+      <tr>
+        <td><img src="${ex.photoSmall}" class="thumb rounded flex-shrink-0" alt="${ex.name}"></td>
+        <td><div class="fw-semibold">${ex.name}</div></td>
+        <td>${ex.dateEnd.toLocaleTimeString('ru-RU')}</td>
+        <td>${ex.reps}</td>
+        <td>${ex.weight}</td>
+        <td class="text-secondary">${ex.time}с</td>
+        <td>
+          <select class="form-select form-select-sm" name="complatedExerciseScore" data-index="${i}">
+            ${option}
+            </select>
+        </td>
+        <td><input type="text" class="form-control form-control-sm" name="complatedExerciseComent" data-index="${i}" value="${ex.comment}"></td>
+      </tr>`;
+  }
+  document.getElementById('tableCompletedBody').innerHTML = html;
+}
+
+/**
+ * Рисует список упражнений активной тренировки в виде вертикальных карточек —
+ * альтернатива renderTable() для того же набора данных. Выполненные
+ * упражнения (sets > 0) подсвечиваются зелёным.
+ *
+ * @category render
+ */
+function renderList() {
+  let html = '';
+  for (let i = 0; i < session.activeWorkout.exercises.length; i++) {
+    const ex = session.activeWorkout.exercises[i];
+    html += `
+      <div class="list-group-item d-flex align-items-center gap-3 ${ex.sets > 0 ? 'list-group-item-success' : ''}">
+        <img src="${ex.photoSmall}" class="thumb rounded flex-shrink-0" alt="${ex.name}">
+        <div class="flex-grow-1">
+          <div class="fw-semibold">${ex.name}</div>
+          <div class="d-flex gap-3 align-items-center mt-1">
+            <div class="input-group input-group-sm" style="width:110px;">
+              <span class="input-group-text">Повт</span>
+              ${renderInputNumber("reps", ex.id, ex.reps)}
+            </div>
+            <div class="input-group input-group-sm" style="width:100px;">
+              <span class="input-group-text">Кг</span>
+              ${renderInputNumber("weight", ex.id, ex.weight)}
+            </div>
+            <span class="text-secondary small">${ex.time}с</span>
+          </div>
+        </div>
+        ${renderStepperControl(ex.id, ex.sets)}
+      </div>`;
+  }
+  document.getElementById('listView').innerHTML = html;
+}
+
+
+/**
+ * Рисует тепловую карту активности за последние полгода — строка на месяц,
+ * квадрат на день, активные дни подсвечены. Данные сейчас захардкожены,
+ * позже должны приходить из session (см. TODO ниже).
+ *
+ * TODO: heatmapMonths и activityTotalCount сейчас статические заглушки,
+ * нужно заменить на реальные данные из session/сервера.
+ *
+ * @category render
+ */
+function renderHeatmap(){
+  let heatmapMonths = [
+    { label: 'Апр', days: 30, active: [2,3,6,9,10,13,17,20,24,27] },
+    { label: 'Май', days: 31, active: [1,4,5,8,11,15,18,19,22,25,29] },
+    { label: 'Июн', days: 30, active: [2,3,7,10,14,17,21,24,28] },
+    { label: 'Июл', days: 31, active: [1,2,5,8,9,12,16,19,23,26,30,31] },
+    { label: 'Авг', days: 31, active: [3,4,7,11,14,18,21,25,28] },
+    { label: 'Сен', days: 16, active: [1,2,5,8,9,12,15] }
+  ];
+
+  let container = document.getElementById("activityHeatmap");
+
+  let html = '';
+  for(let i = 0; i < heatmapMonths.length; i++){
+    // Создать строку
+    html += `<div class="heatmap-row"><div class="heatmap-label">${heatmapMonths[i].label}</div><div class="heatmap-cells">`;
+    for(let j = 1; j <= heatmapMonths[i].days; j++){
+      let isActive = heatmapMonths[i].active.includes(j);
+      // ДОбавить квартратич с учетом активный он или нет
+      html += `<div class="heatmap-cell${isActive ? ' active' : ''}" title="${heatmapMonths[i].label}, день ${j}"></div>`;
+
+    }
+    html += `</div></div>`;
+  }
+
+  container.innerHTML = html;
+  document.getElementById('activityTotalCount').textContent = 155;
+}
+
+
+
+</script>

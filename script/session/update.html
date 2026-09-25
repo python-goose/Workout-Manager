@@ -1,0 +1,230 @@
+<script>
+// ════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+//  4. UPDATE
+// ════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+
+
+/**
+ * Обновляет прогресс-бар и текст таймера каждую секунду — вызывается как
+ * callback из Timer.onTick (не как обычное DOM-событие, а через подключение
+ * timer.onTick = updateTimerCallback). Красит прогресс-бар и рамку карточки
+ * таймера в цвет, соответствующий текущей фазе (подготовка/тренировка/
+ * перетренированность).
+ *
+ * @category update
+ * @param {Timer} t - экземпляр таймера, передаётся самим Timer при каждом тике
+ */
+function updateTimerCallback(t){
+  let bar = document.getElementById('my_progress');
+  let card = document.getElementById('TimeView');
+
+  // Задать новое значение шкалы прогрес бара
+  bar.style.width = t.getPercent() + "%";
+  bar.textContent = t.getPercent() + "%";
+
+  // Обновить таймер на клиенте
+  document.getElementById("timer_text").textContent = Timer.formatTime(t.currentSeconds);
+
+  // Очистить классы бара и обводку карточки
+  card.classList.remove('border-warning', 'border-success', 'border-danger', 'border-2', 'border-opacity-50');
+  bar.classList.remove('bg-warning', 'bg-success', 'bg-danger');
+
+  // Получить текущее состояние тренировки (этап) 'prep' | 'train' | 'overtrain'
+  let phase = t.getPhase();
+
+  // В зависимости от состояние тренировки, становить задний фон прогрес бара и обводку карточки
+  if(phase === 'prep'){
+    bar.classList.add("bg-warning");
+    card.classList.add('border-warning', 'border-2', 'border-opacity-50')
+  }else if (phase === 'train'){
+    bar.classList.add("bg-success");
+    card.classList.add('border-success', 'border-2', 'border-opacity-50')
+  }else{
+    bar.classList.add("bg-danger");
+    card.classList.add('border-danger', 'border-2', 'border-opacity-50')
+  }
+}
+
+
+/**
+ * Позиционирует две разделительные линии на шкале прогресс-бара — они
+ * отмечают границы между фазами "подготовка/тренировка" и
+ * "тренировка/перетренированность", в процентах от общей длительности таймера.
+ *
+ * @category update
+ */
+function updateBarLine(){
+  const stepPercent = 100 / timer.totalSeconds;
+  document.getElementById('line-first').style.left = (stepPercent * timer.prepSeconds) + '%';
+  document.getElementById('line-second').style.left = (stepPercent * (timer.prepSeconds + timer.trainSeconds)) + '%';
+}
+
+
+/**
+ * Обновляет счётчик "Выполнено сетов" в шапке — отображает
+ * общее количество выполненных сетов за сессию.
+ *
+ * @category update
+ */
+function updateSetCount(){
+  document.getElementById("totalSets").textContent = session.totalSets;
+}
+
+
+/**
+ * Обновляет карточку активного упражнения — фото, название, поля ввода
+ * повторений/веса, степпер сетов, счётчик позиции ("N / M") и точки-навигацию
+ * внизу карточки. Точки красятся по статусу: зелёная — есть хотя бы 1 сет,
+ * синяя — текущее активное упражнение, серая — ещё не начато.
+ *
+ * @category update
+ */
+function updateCard() {
+  // Айдишник активного упражнения
+  const id = session.activeExerciseId
+  // Активное упражнения
+  const ex = session.activeWorkout.getExerciseById(id);
+  // порядковый номер упражнения
+  let position = session.activeWorkout.getElementPositionById(id);
+
+  document.getElementById('ccPhoto').src = ex.photoLarge;
+  document.getElementById('ccPhoto').alt = ex.name;
+  document.getElementById('ccCounter').textContent = `${position + 1} / ${session.activeWorkout.exercises.length}`;
+  document.getElementById('ccCounter').className = 'badge mb-2 ' + (ex.sets > 0 ? 'text-bg-success' : 'text-bg-secondary');
+  document.getElementById('ccName').textContent = ex.name;
+  document.getElementById('ccMeta').textContent = `${ex.time} сек / подход · выполнено сетов: ${ex.sets}`;
+
+  // Поле ввода для повторений и весов, добавляю span, если они будут не в одном контейнере то будет перенос строки
+  document.getElementById("ccFieldsWrapReps").innerHTML = '<span class="input-group-text">Повт</span>' + renderInputNumber("reps", ex.id, ex.reps);
+  document.getElementById("ccFieldsWrapWeight").innerHTML = '<span class="input-group-text">Кг</span>' + renderInputNumber("weight", ex.id, ex.weight);
+
+  // Кнопки управления сетами, +1 и -1
+  document.getElementById('ccStepperWrap').innerHTML = renderStepperControl(ex.id, ex.sets);
+
+  document.getElementById('ccCard').classList.toggle('cc-done', ex.sets > 0);
+  document.getElementById('ccDoneBadge').classList.toggle('d-none', ex.sets === 0);
+
+  // Точки-навигация внизу карточки
+  let dotsHtml = '';
+  for (let j = 0; j < session.activeWorkout.exercises.length; j++) {
+    // Все упражнения где есть хотябы 1 сет, отметить зеленой точкой
+    let color = session.activeWorkout.exercises[j].sets > 0 ? '#198754' : '#ced4da';
+    // Если упражнения текущее, то отметить его синей точкой
+    if (session.activeWorkout.exercises[j].id === id) color = '#0d6efd';
+    dotsHtml += `<button type="button" class="btn cc-dot" style="background:${color};" 
+    data-id="${session.activeWorkout.exercises[j].id}" 
+    title="${session.activeWorkout.exercises[j].name}"></button>`;
+  }
+
+  document.getElementById('ccDots').innerHTML = dotsHtml;
+}
+
+
+/**
+ * Обновляет карточку итогов тренировки на странице финиша — время старта/конца,
+ * длительность, количество сетов и уникальных упражнений, поднятый вес,
+ * комментарий и оценку сложности.
+ *
+ * @category update
+ */
+function updateCompletedCart(){
+  let ex = session.completedWorkout
+  document.getElementById("cardCompletedStart").textContent = ex.dateStart ? ex.dateStart.toLocaleTimeString('ru-RU') : "00:00:00";
+  document.getElementById("cardCompletedEnd").textContent = ex.dateEnd ? ex.dateEnd.toLocaleTimeString('ru-RU') : "00:00:00";
+  document.getElementById("cardCompletedDuration").textContent = ex.duration ? Timer.formatTime(Math.floor(ex.duration / 1000)) : "00:00:00";
+  document.getElementById("cardCompletedSetsTotal").textContent = ex.countSet;
+  document.getElementById("cardCompletedExTotal").textContent = ex.countUniqueExercises;
+  document.getElementById("cardCompletedVolume").textContent = ex.totalWeightLifted + 'кг';
+  document.getElementById("cardCompletedComment").textContent = ex.comment;
+  document.getElementById("cardCompletedScore").value = ex.complexityAssessment;
+  document.getElementById("cardCompletedScoreBadge").textContent = ex.complexityAssessment;
+
+}
+
+
+/**
+ * Переключает видимость таблицы/списка/карточки в зависимости от текущего
+ * выбранного вида (session.view). Блоки скрываются также, если пользователь
+ * не на главной странице (session.pageWiew !== 'main').
+ *
+ * @category update
+ */
+function updateViewVisibility(){
+  const isMainPage = session.pageWiew === 'main';
+  document.getElementById("tableView").classList.toggle("d-none", !isMainPage || session.view !== 'table')
+  document.getElementById("listView").classList.toggle("d-none", !isMainPage || session.view !== 'list')
+  document.getElementById("carouselView").classList.toggle("d-none", !isMainPage || session.view !== 'carousel')
+}
+
+
+/**
+ * Обновляет доступность кнопок старт/пауза/стоп и текст кнопки старта,
+ * основываясь только на текущем состоянии: запущен ли таймер сейчас
+ * (timer.isRunning()) и был ли уже первый старт (dateStart !== null).
+ * Не знает, какая кнопка вызвала обновление — просто каждый раз заново
+ * отражает актуальный факт.
+ *
+ * @category update
+ */
+function updateTimerControls(){
+  let running = timer.isRunning();
+  let alreadyStarted = session.completedWorkout.dateStart !== null;
+
+  document.getElementById('start_timer').disabled = running;
+  document.getElementById('pause_timer').disabled = !running;
+  document.getElementById('stop_timer').disabled = !running;
+  document.getElementById('btnStartLabel').textContent = alreadyStarted ? "Продолжить" : "Старт";
+}
+
+
+/**
+ * Переключает видимость между двумя "страницами" приложения — тренировкой
+ * (таймер и переключатель вида) и итогами (карточка итогов, тепловая карта,
+ * таблица выполненных упражнений, кнопка сохранения) — на основе session.pageWiew.
+ *
+ * @category update
+ */
+function updatePageVisibility(){
+  const isMainPage = session.pageWiew === 'main';
+
+  // Блоки главной страницы
+  document.getElementById("TimeView").classList.toggle("d-none", !isMainPage);
+  document.getElementById("WorkoutSwitcherView").classList.toggle("d-none", !isMainPage);
+  //document.getElementById("loadStatus").classList.toggle("d-none", !isMainPage);
+
+  // Блоки страницы итогов
+  document.getElementById("cardCompletedView").classList.toggle("d-none", isMainPage);
+  document.getElementById("activityHeatmapView").classList.toggle("d-none", isMainPage);
+  document.getElementById("tableCompletedView").classList.toggle("d-none", isMainPage);
+  document.getElementById("BtnCompletedView").classList.toggle("d-none", isMainPage);
+}
+
+
+/**
+ * Обновляет бейдж оценки сложности тренировки — цвет зависит от значения:
+ * зелёный (до 30), жёлтый (31–60), красный (выше 60).
+ *
+ * @category update
+ */
+function updateComplexityBadge(){
+  // Текущая оценка сложности
+  let value = session.completedWorkout.complexityAssessment;
+  // Бейдж, оценка справа от скалы
+  let badge = document.getElementById('cardCompletedScoreBadge');
+
+  // Определить задницы фон бейждыка
+  let styleBadge;
+  if (value <= 30) styleBadge = 'text-bg-success';
+  else if (value <= 60) styleBadge = 'text-bg-warning';
+  else styleBadge = 'text-bg-danger';
+
+  // Установить значения полоски для бейжждыка
+  badge.textContent = value
+  // Удалить все цвета бейждынка перед установкой нового
+  badge.classList.remove('text-bg-success', 'text-bg-warning', 'text-bg-danger');
+  // Установить новый цвет
+  badge.classList.add(styleBadge)
+  
+}
+
+</script>

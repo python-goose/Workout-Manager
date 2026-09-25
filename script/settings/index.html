@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="ru" data-bs-theme="light">
+  <head>
+    <meta charset="UTF-8">
+    <base target="_top">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <style>
+      html, body {  background-color: var(--bs-body-bg);}
+      body { padding: 24px; }
+      /* Тот же приглушённо-серый заголовок, что у тебя в тестах и итогах — переиспользую в таблице предпросмотра */
+      .table thead th { font-weight:600; font-size:.8rem; color:#6c757d; border-bottom-width:1px; }
+      /*На контейнер данных навешать прозрачность. после загрузки данные отобразить его background-color:#f4f5f7;*/
+      #mainContainer {opacity: 0;transition: opacity 0.3s ease;}
+      #mainContainer.loaded {opacity: 1;}
+    </style>
+  </head>
+  <body>
+  <div id="mainContainer" class="container" style="max-width:1200px;">
+    <h4 class="mb-3"><i class="bi bi-gear"></i> Настройки приложения</h4>
+    <div class="row">
+      
+      <!-- ============================================================ -->
+      <!-- ============ ЛЕВЫЙ САЙДБАР: ЯКОРНАЯ НАВИГАЦИЯ ============ -->
+      <!-- ============================================================ -->
+      <div class="col-12 col-lg-3 mb-3">
+        <div class="list-group sticky-top shadow-sm" id="settingsSidebar" style="top: 1rem;">
+          <a class="list-group-item list-group-item-action" href="#section-profile"><i class="bi bi-person"></i> Профиль</a>
+          <a class="list-group-item list-group-item-action" href="#section-session"><i class="bi bi-stopwatch"></i> Тренировка и таймер</a>
+          <a class="list-group-item list-group-item-action" href="#section-theme"><i class="bi bi-palette"></i> Стилизация</a>
+          <a class="list-group-item list-group-item-action" href="#section-data"><i class="bi bi-database"></i> Данные</a>
+        </div>
+      </div>
+
+      <!-- ============================================================ -->
+      <!-- ============ ПРАВАЯ КОЛОНКА: СЕКЦИИ НАСТРОЕК ============ -->
+      <!-- ============================================================ -->
+      <div id="settingsContent" class="col-12 col-lg-9" data-bs-spy="scroll" data-bs-target="#settingsSidebar" data-bs-offset="20" tabindex="0" style="scroll-behavior:smooth;">
+
+        <!-- ================= ПРОФИЛЬ ================= -->
+        <div id="section-profile" class="card shadow-sm mb-4">
+          <div class="card-body">
+            <h5 class="card-title mb-3"><i class="bi bi-person"></i> Профиль</h5>
+
+            <div class="row g-3 mb-3">
+              <div class="col-6 col-sm-4">
+                <label class="form-label small fw-semibold mb-1" for="settingsHeight">Рост</label>
+                <div class="input-group">
+                  <input type="number" min="100" max="250" step="1" class="form-control" id="settingsHeight" value="0">
+                  <span class="input-group-text">см</span>
+                </div>
+              </div>
+
+              <div class="col-6 col-sm-4">
+                <label class="form-label small fw-semibold mb-1" for="settingsWeight">Вес</label>
+                <div class="input-group">
+                  <input type="number" min="30" max="300" step="0.5" class="form-control" id="settingsWeight" value="0">
+                  <span class="input-group-text">кг</span>
+                </div>
+              </div>
+
+              <div class="col-6 col-sm-4">
+                <label class="form-label small fw-semibold mb-1" for="settingsAge">Возраст</label>
+                <div class="input-group">
+                  <input type="number" min="10" max="100" step="1" class="form-control" id="settingsAge" value="0">
+                  <span class="input-group-text">лет</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="mb-1">
+              <label class="form-label small fw-semibold mb-1">Пол</label>
+              <div class="btn-group ms-2" role="group" aria-label="Пол">
+                <input type="radio" class="btn-check" name="settingsGender" id="settingsGenderMale" checked>
+                <label class="btn btn-outline-secondary btn-sm" for="settingsGenderMale"><i class="bi bi-gender-male"></i> Мужской</label>
+
+                <input type="radio" class="btn-check" name="settingsGender" id="settingsGenderFemale">
+                <label class="btn btn-outline-secondary btn-sm" for="settingsGenderFemale"><i class="bi bi-gender-female"></i> Женский</label>
+              </div>
+              <div class="form-text">Используется для расчёта калорий, ИМТ и рекомендуемых рабочих весов.</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ================= ТРЕНИРОВКА И ТАЙМЕР ================= -->
+        <div id="section-session" class="card shadow-sm mb-4">
+          <div class="card-body">
+            <h5 class="card-title mb-3"><i class="bi bi-stopwatch"></i> Тренировка и таймер</h5>
+
+            <div class="mb-3">
+              <label class="form-label small fw-semibold mb-1" for="settingsPrepSeconds">Время подготовки перед тренировкой</label>
+              <div class="d-flex align-items-center gap-2">
+                <input type="range" class="form-range" id="settingsPrepSeconds" min="0" max="60" value="0"
+                       oninput="document.getElementById('settingsPrepSecondsBadge').textContent = this.value + ' сек'">
+                <span class="badge text-bg-secondary" id="settingsPrepSecondsBadge" style="min-width:64px;">20 сек</span>
+              </div>
+              <div class="form-text">Пауза перед стартом рабочего времени упражнения — фаза «Подготовка» на шкале таймера.</div>
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label small fw-semibold mb-1" for="settingsRestSeconds">Время отдыха между подходами</label>
+              <div class="d-flex align-items-center gap-2">
+                <input type="range" class="form-range" id="settingsRestSeconds" min="0" max="300" step="5" value="0"
+                       oninput="document.getElementById('settingsRestSecondsBadge').textContent = this.value + ' сек'">
+                <span class="badge text-bg-secondary" id="settingsRestSecondsBadge" style="min-width:64px;">60 сек</span>
+              </div>
+              <div class="form-text">Общее время отдыха после каждого сета. Используется для упражнений, у которых не задано своё индивидуальное время отдыха.</div>
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label small fw-semibold mb-1" for="settingsOvertimeFactor">Мультипликатор перетренированности</label>
+              <div class="input-group" style="max-width:160px;">
+                <input type="number" min="0" max="100" step="5" class="form-control" id="settingsOvertimeFactor" value="0">
+                <span class="input-group-text">%</span>
+              </div>
+              <div class="form-text">Сколько процентов сверх планового времени тренировки допускается, прежде чем шкала перейдёт в фазу «Перетренированность».</div>
+            </div>
+
+            <div class="mb-1">
+              <label class="form-label small fw-semibold mb-1">Вид упражнений по умолчанию</label>
+              <div class="btn-group ms-2" role="group" aria-label="Вид по умолчанию">
+                <input type="radio" class="btn-check" name="settingsDefaultView" id="settingsViewTable" checked>
+                <label class="btn btn-outline-secondary btn-sm" for="settingsViewTable"><i class="bi bi-table"></i> Таблица</label>
+
+                <input type="radio" class="btn-check" name="settingsDefaultView" id="settingsViewList">
+                <label class="btn btn-outline-secondary btn-sm" for="settingsViewList"><i class="bi bi-list-ul"></i> Список</label>
+
+                <input type="radio" class="btn-check" name="settingsDefaultView" id="settingsViewCarousel">
+                <label class="btn btn-outline-secondary btn-sm" for="settingsViewCarousel"><i class="bi bi-images"></i> Карточка</label>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ================= СТИЛИЗАЦИЯ ================= -->
+        <div id="section-theme" class="card shadow-sm mb-4">
+          <div class="card-body">
+            <h5 class="card-title mb-3"><i class="bi bi-palette"></i> Стилизация</h5>
+
+            <div class="mb-1">
+              <label class="form-label small fw-semibold mb-1" for="settingsThemeSelect">Тема оформления</label>
+              <select class="form-select" id="settingsThemeSelect" style="max-width:220px;">
+                <option value="light">Светлая</option>
+                <option value="dark">Тёмная</option>
+              </select>
+              <div class="form-text">Выберите оформление интерфейса приложения.</div>
+            </div>
+          </div>
+        </div>
+
+
+        <!-- ================= ДАННЫЕ ================= -->
+        <div id="section-data" class="card shadow-sm mb-4">
+          <div class="card-body">
+            <h5 class="card-title mb-3"><i class="bi bi-database"></i> Данные</h5>
+
+            <div class="d-flex justify-content-between align-items-center mb-3">
+              <div>
+                <div class="fw-semibold">Сбросить настройки</div>
+                <div class="small text-secondary">Вернуть все настройки к значениям по умолчанию.</div>
+              </div>
+              <button class="btn btn-outline-danger" id="settingsResetBtn"><i class="bi bi-arrow-counterclockwise"></i> Сбросить</button>
+            </div>
+
+            <!--
+            <div class="d-flex justify-content-between align-items-center">
+              <div>
+                <div class="fw-semibold text-danger">Очистить историю</div>
+                <div class="small text-secondary">Удалит все записи о тренировках и подходах безвозвратно.</div>
+              </div>
+              <button class="btn btn-outline-danger" id="settingsClearHistoryBtn"><i class="bi bi-trash3"></i> Очистить</button>
+            </div> 
+            -->
+
+            <hr class="text-secondary opacity-25">
+            <div class="small text-secondary">Последнее сохранение: <span id="settingsLastSaved">—</span></div>
+          </div>
+        </div>
+
+        <!-- ================= КНОПКА СОХРАНИТЬ ================= -->
+        <div class="d-flex justify-content-end gap-2 mb-4">
+          <button class="btn btn-primary" id="settingsSaveBtn"><i class="bi bi-check-lg"></i> Сохранить</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+
+    let settings = null;
+    let normalBtnSave = true
+
+    // Записать все данные с настроек в поля
+    function updateFields(){
+      document.getElementById("settingsHeight").value = settings.profile_height;
+      document.getElementById("settingsWeight").value = settings.profile_weight;
+      document.getElementById("settingsAge").value = settings.profile_age;
+      document.getElementById(settings.profile_gender === "male" ? "settingsGenderMale": "settingsGenderFemale").checked = true
+      document.getElementById("settingsPrepSeconds").value = settings.workoutSession_prepTimeSec;
+      document.getElementById("settingsPrepSecondsBadge").textContent = `${settings.workoutSession_prepTimeSec} сек`
+      document.getElementById("settingsRestSeconds").value = settings.workoutSession_restTimeSec;
+      document.getElementById("settingsRestSecondsBadge").textContent = `${settings.workoutSession_restTimeSec} сек`
+      document.getElementById("settingsOvertimeFactor").value = settings.workoutSession_overtrainingMultiplier * 100;
+      let mul = settings.workoutSession_exerciseViewMode
+      document.getElementById(mul === "table" ? "settingsViewTable": mul === "list" ? "settingsViewList" : "settingsViewCarousel").checked = true
+      document.getElementById("settingsThemeSelect").value = settings.style_theme_color;
+      document.documentElement.setAttribute("data-bs-theme", settings.style_theme_color)
+      document.getElementById("settingsLastSaved").textContent = settings.meta_lastSavedAt
+      // Добавляем кастомный клласс который плавно покажет содержымое
+      document.getElementById("mainContainer").classList.add("loaded")
+    }
+
+
+    // Обработка загрузки окна
+    window.onload = function(){
+      google.script.run
+        .withSuccessHandler((config)=>{
+          settings = config
+          updateFields();
+        })
+        .withFailureHandler(()=>{})
+        .get_settings_data()
+    }
+
+    // При смене темы, показываем сразу актуальную тему
+    document.getElementById("settingsThemeSelect").addEventListener("change", (event)=>{
+      let value = event.target.value
+      document.documentElement.setAttribute("data-bs-theme", value)
+    })
+
+
+    // Обработка кнопки сбросить
+    document.getElementById("settingsResetBtn").addEventListener("click", ()=>{
+      if (!confirm("Сбросить все настройки до значений по умолчанию?")) return;
+      let btn = document.getElementById("settingsResetBtn")
+      btn.disabled = true
+      btn.innerHTML = `<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Сброс...`
+      google.script.run
+        .withSuccessHandler((config) => {
+          btn.innerHTML = `<i class="bi bi-check2"></i> Сброшено`;
+          setTimeout(()=>{
+            btn.innerHTML = `<i class="bi bi-arrow-counterclockwise"></i> Сбросить`
+            btn.disabled = false
+          }, 2000)
+          settings = config; 
+          updateFields()
+        })
+        .withFailureHandler((er) => {})
+        .reset_settings_data()
+    })
+
+
+
+    // Обработка кнопки сохранить
+    document.getElementById("settingsSaveBtn").addEventListener("click", ()=>{
+      // Кнопка сохранить в работе
+      document.getElementById("settingsSaveBtn").innerHTML = ` <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>  Сохранение...`
+      document.getElementById("settingsSaveBtn").disabled = true
+    
+      google.script.run
+        .withSuccessHandler((updated_config) => {
+          // Кнопка сохранить завершыла сохранение
+          let btn = document.getElementById("settingsSaveBtn")
+          btn.innerHTML = ` <i class="bi bi-check2"></i> Сохранено`
+          btn.classList.remove("btn-primary")
+          btn.classList.add("btn-success")
+          normalBtnSave = false
+
+          settings = updated_config; 
+          updateFields()
+        })
+        .withFailureHandler((er) => {})
+        .save_settings_data({
+          profile_height: Number(document.getElementById("settingsHeight").value),
+          profile_weight: Number(document.getElementById("settingsWeight").value), 
+          profile_age: Number(document.getElementById("settingsAge").value),               
+          profile_gender: document.getElementById("settingsGenderMale").checked ? "male" : "female",
+          workoutSession_prepTimeSec: Number(document.getElementById("settingsPrepSeconds").value),
+          workoutSession_restTimeSec: Number(document.getElementById("settingsRestSeconds").value),
+          workoutSession_overtrainingMultiplier: Number(document.getElementById("settingsOvertimeFactor").value) / 100,  
+          workoutSession_exerciseViewMode: document.getElementById("settingsViewTable").checked ? "table" : document.getElementById("settingsViewList").checked ? "list" : "card",
+          style_theme_color: document.getElementById("settingsThemeSelect").value
+      })
+    })
+
+    // Сбросить кнопку на стандартных настройках
+    function updateResetBtnSave(){
+      if(normalBtnSave) return;
+      let btn = document.getElementById("settingsSaveBtn") 
+      btn.innerHTML = `<i class="bi bi-check-lg"></i> Сохранить`
+      btn.classList.remove("btn-success")
+      btn.classList.add("btn-primary")
+      btn.disabled = false
+      normalBtnSave = true
+    }
+    
+    //Если хоть какое то поле изменилось, то кнопку старта сбросить 
+    document.getElementById("settingsContent").addEventListener("input", updateResetBtnSave)
+    document.getElementById("settingsContent").addEventListener("input", updateResetBtnSave)
+
+
+    document.querySelectorAll('#settingsSidebar a[href^="#"]').forEach(link => {
+      link.addEventListener('click', (e) => {
+        e.preventDefault(); // отменяем стандартную навигацию по якорю
+        const targetId = link.getAttribute('href').slice(1); // убираем "#"
+        const targetEl = document.getElementById(targetId);
+        if (targetEl) {
+          targetEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+      });
+    });
+
+
+  </script>
+  </body>
+</html>

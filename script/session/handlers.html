@@ -1,0 +1,255 @@
+<script>
+// ════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+//  5. ОБРАБОТЧИКИ СОБЫТИЙ (ON) 
+// ════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+
+/**
+ * Реагирует на переключение активной тренировки в контейнере workoutSwitcher.
+ * Игнорирует клики не по btn-check элементам (например, по обёртке контейнера).
+ * Id новой тренировки берётся из data-workout-id нажатой кнопки.
+ *
+ * @category handler
+ * @param {Event} event - событие change от контейнера workoutSwitcher
+ */
+function onWorkoutChange(event){
+  if(!event.target.classList.contains("btn-check")){return;}
+  session.setActiveWorkoutByid(event.target.dataset.workoutId);
+  render();
+}
+
+
+/**
+ * Реагирует на клик по точке-навигации в карточке упражнения — переключает
+ * активное упражнение на то, чей id указан в data-id нажатой точки.
+ * Использует closest(), чтобы поймать клик даже по вложенным элементам
+ * внутри кнопки-точки. Если кликнули по уже активной точке — ничего не делает.
+ *
+ * @category handler
+ * @param {Event} event - событие click от контейнера ccDots
+ */
+function onDotClick(event){
+  let dot = event.target.closest("button[data-id]");
+  let id = Number(dot.dataset.id);
+  // Если нажали на кнопку текущего упражнения, ничего не делать
+  if(session.activeExerciseId === id) return;
+  session.activeExerciseId = id;
+  render();
+}
+
+
+/** ⛔️
+ * Реагирует на нажатие кнопки "Старт" — фиксирует время начала тренировки
+ * (только при первом нажатии, повторные вызовы setDateStart игнорируются),
+ * запускает таймер и обновляет состояние кнопок.
+ *
+ * @category handler
+ */
+function onStartClick(){
+  session.completedWorkout.setDateStart();
+  // Расчитать показатели, общей длительности тренировки на основе выбраной тренировки
+  timer.build(session.activeWorkout.time)
+  timer.start()
+  updateTimerControls()
+}
+
+
+/**
+ * Реагирует на нажатие кнопки "Пауза" — останавливает таймер
+ * (без сброса currentSeconds) и обновляет состояние кнопок.
+ *
+ * @category handler
+ */
+function onPauseClick(){
+  timer.pause();
+  updateTimerControls()
+}
+
+
+/**
+ * Реагирует на нажатие кнопки "Финиш" — останавливает и сбрасывает таймер,
+ * досчитывает итоговые показатели тренировки, переключает страницу на итоги
+ * и запускает полную перерисовку.
+ *
+ * @category handler
+ */
+function onStopClick(){
+  timer.stop();
+  // обновить экран сразу (иначе останется последнее значение до следующего тика)
+  timer.onTick(timer); 
+  session.completedWorkout.calculateTotal();
+  session.pageWiew = 'end';
+  updateTimerControls()
+  render();
+}
+
+
+/**
+ * Реагирует на изменение поля "повторения" или "вес" у упражнения —
+ * определяет, какое именно поле изменилось, по его атрибуту name,
+ * и сохраняет новое значение в session. Игнорирует изменения других полей
+ * внутри того же контейнера (делегирование события с фильтром по name).
+ *
+ * @category handler
+ * @param {Event} event - событие change от контейнера с полями упражнения
+ */
+function onExerciseValueChange(event){
+  let target = event.target;
+  if(target.name !== "weight" && target.name !== "reps") return;
+
+  let id = Number(target.dataset.id)
+
+  if(target.name === "weight"){session.setWeight(id, Number(target.value))}
+  if(target.name === "reps"){session.setReps(id, Number(target.value))}
+}
+
+
+/**
+ * Реагирует на клик по кнопкам степпера "+1"/"-1" сета — определяет
+ * направление изменения по атрибуту data-action ("plus"/"minus") нажатой
+ * кнопки, используя closest() для попадания даже по вложенной иконке.
+ * Игнорирует клики не по кнопкам степпера.
+ *
+ * @category handler
+ * @param {Event} event - событие click от контейнера со степпером
+ */
+function onSetsClick(event){
+  let btn = event.target.closest("button[data-action]");
+  if (!btn) return;
+
+  let id = Number(btn.dataset.id);
+  let delta = btn.dataset.action === 'plus' ? 1 : -1;
+  session.changeSets(id, delta)
+  render();
+}
+
+
+/**
+ * Реагирует на изменение ползунка общей сложности тренировки —
+ * сохраняет новое значение в session и обновляет цвет/текст бейджа.
+ *
+ * @category handler
+ * @param {Event} event - событие change от ползунка cardCompletedScore
+ */
+function onComplexityChange(event){
+  session.completedWorkout.setComplexityAssessment(Number(event.target.value))
+  updateComplexityBadge()
+}
+
+
+/**
+ * Реагирует на ввод текста в поле комментария тренировки, с debounce
+ * в 1 секунду — при каждом новом символе сбрасывает предыдущий таймер
+ * и запускает новый, чтобы сохранение в session срабатывало только
+ * после того, как пользователь перестал печатать.
+ *
+ * @category handler
+ * @param {Event} event - событие input от поля cardCompletedComment
+ */
+let timeoutId;
+function onCommentInput(event){
+  clearTimeout(timeoutId);
+  timeoutId = setTimeout(() => {
+    let commentText = event.target.value;
+    session.completedWorkout.setComment(commentText);
+  }, 1000);
+}
+
+
+/**
+ * Реагирует на изменение оценки сложности или комментария у конкретного
+ * выполненного подхода в таблице итогов.
+ *
+ * WARNING: работает через порядковый номер (data-index), а не через id
+ * упражнения — одно и то же упражнение может встречаться в списке
+ * несколько раз (несколько подходов), поэтому только позиция в массиве
+ * session.completedWorkout.exercise однозначно определяет нужную запись.
+ *
+ * @category handler
+ * @param {Event} event - событие change от таблицы tableCompletedBody
+ */
+function onCompletedExerciseChange(event){
+  let target = event.target;
+  if(target.name !== "complatedExerciseScore" && target.name !== "complatedExerciseComent") return;
+
+  let index = Number(target.dataset.index)
+  let value = null;
+
+  let exercise = session.completedWorkout.exercise[index]
+
+  if(target.name === "complatedExerciseScore"){
+    value = Number(target.value)
+    exercise.setComplexityAssessment(value);
+  }else{
+    value = target.value
+    exercise.setComment(value)
+  }
+}
+
+
+/**
+ * Реагирует на нажатие кнопки "Сохранить тренировку" — сериализует
+ * session.completedWorkout в чистый JSON-объект и отправляет на сервер
+ * через google.script.run. Флаг savintStatus блокирует повторную отправку
+ * при повторных нажатиях (например, если пользователь кликнет несколько раз
+ * до ответа сервера).
+ *
+ * @category handler
+ */
+let savintStatus = false
+function onSaveWorkoutClick(){
+  if (!savintStatus){
+    savintStatus=true;
+    const payload = JSON.parse(JSON.stringify(session.completedWorkout));
+
+    google.script.run
+    .withSuccessHandler(function(response) {})
+    .withFailureHandler(function(err) {console.error('Ошибка: ' + err.message);})
+    .seve_data_from_client(payload);
+  }
+  render();
+}
+
+
+// Переключение активной тренировки
+document.getElementById("workoutSwitcher").addEventListener("change", onWorkoutChange)
+
+// Переключение вида отображения: таблица / список / карточка
+document.getElementById("viewTable").addEventListener("change", () => {session.setView("table"); render();})
+document.getElementById("viewList").addEventListener("change", () => {session.setView("list"); render();})
+document.getElementById("viewCarousel").addEventListener("change", () => {session.setView("carousel"); render();})
+
+// Навигация "Пред."/"След." в карточке упражнения
+document.getElementById("ccPrev").addEventListener("click", () => {session.setPrevIdExercise(); render();})
+document.getElementById("ccNext").addEventListener("click", () => {session.setNextIdExercise(); render();})
+
+// Точки-навигация внизу карточки
+document.getElementById("ccDots").addEventListener("click", onDotClick)
+
+// Кнопки управления таймером: старт / пауза / стоп
+document.getElementById('pause_timer').addEventListener('click', onPauseClick);
+document.getElementById('start_timer').addEventListener('click', onStartClick);
+document.getElementById('stop_timer').addEventListener('click', onStopClick);
+
+// Поля reps/weight упражнения — таблица, список, карточка
+document.getElementById("tableBody").addEventListener("change", onExerciseValueChange);
+document.getElementById("listView").addEventListener("change", onExerciseValueChange);
+document.getElementById("ccFieldsWrapForEvent").addEventListener("change", onExerciseValueChange);
+
+// Степпер сетов "+1"/"-1" — таблица, список, карточка
+document.getElementById('tableBody').addEventListener('click', onSetsClick);
+document.getElementById('listView').addEventListener('click', onSetsClick);
+document.getElementById('ccStepperWrap').addEventListener('click', onSetsClick);
+
+// Ползунок общей сложности тренировки
+document.getElementById("cardCompletedScore").addEventListener("change", onComplexityChange)
+
+// Поле комментария тренировки
+document.getElementById("cardCompletedComment").addEventListener("input", onCommentInput)
+
+// Таблица итогов: оценка и комментарий каждого подхода
+document.getElementById('tableCompletedBody').addEventListener("change", onCompletedExerciseChange)
+
+// Кнопка сохранения тренировки
+document.getElementById("saveWorkoutBtn").addEventListener('click', onSaveWorkoutClick)
+
+</script>

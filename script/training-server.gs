@@ -2,26 +2,109 @@
 function onOpen() {
   SpreadsheetApp.getUi()
     .createMenu('💪 Menu')
-    .addItem('Тренировка', 'open_training_modal')
+    .addItem('🏋️‍♂️ Start session', 'open_session_modal')
+    .addItem('⚙️ Settings', 'open_settings_modal')
     .addToUi();
 }
 
+// Используеться для сборки файлов в один
+// Вызываеться в index
+function include(filename) {
+  return HtmlService.createHtmlOutputFromFile(filename).getContent();
+}
+
 // Открыть модальное окно тренировки
-function open_training_modal() {
-  var html = HtmlService.createHtmlOutputFromFile('prod/training-client').setWidth(1400).setHeight(1200);
+function open_session_modal() {
+  var template = HtmlService.createTemplateFromFile('session/index');
+  var html = template.evaluate()
+    .setWidth(1400)
+    .setHeight(1200);
   SpreadsheetApp.getUi().showModalDialog(html, "v2");
+}
+
+// Открыть модальное окно настроек приложения
+function open_settings_modal() {
+  var template = HtmlService.createTemplateFromFile('settings/index');
+  var html = template.evaluate()
+    .setWidth(1400)
+    .setHeight(1200);
+  SpreadsheetApp.getUi().showModalDialog(html, "Settings");
+}
+
+
+function get_data_from_server_pro(){
+  let ss = SpreadsheetApp.getActiveSpreadsheet();
+  let training_sheet = ss.getSheetByName('training')
+  let exercises_sheet = ss.getSheetByName('exercises')
+  let training_last_row = training_sheet.getLastRow();
+  let training_last_col = training_sheet.getLastColumn();
+
+  let time_cong = {
+    'wr-ls': 'main',
+    'Norm': 'dop',
+    'tes': 'tes',
+    'wr-ls-2': 'wrls2',
+    "pars": "pars"
+  }
+
+  
+  // (строка_начала, колонка_начала, количество_строк, количество_колонок)
+  let training_data = training_sheet.getRange(1, 1, training_last_row, training_last_col).getValues()
+  let exercises_data = exercises_sheet.getRange(2, 1, exercises_sheet.getLastRow(), exercises_sheet.getLastColumn()).getValues()
+  console.log(exercises_data)
+  let workoutsMap = {}
+
+  for(let i = 1; i < training_data.length; i++){
+    if(!workoutsMap[training_data[i][1]]){
+      workoutsMap[training_data[i][1]] = {
+        id: time_cong[training_data[i][1]],
+        name: training_data[i][1],
+        archived: false,
+        time: 0,
+        exercises: []
+      }
+    }
+
+    let photo = ''
+    for(let j = 0; j < exercises_data.length; j++){
+      if(exercises_data[j][2] === training_data[i][2]){
+        photo = exercises_data[j][4]
+        break;
+      } 
+    }
+
+    workoutsMap[training_data[i][1]].exercises.push({
+      id: i,
+      name: training_data[i][2],
+      reps: training_data[i][3],
+      weight: training_data[i][4],
+      time: Number(training_data[i][5] * training_data[i][3]),
+      time_one_ex: training_data[i][5],
+      photo_small: photo,
+      photo_large: photo,
+    })
+
+    workoutsMap[training_data[i][1]].time += Number(training_data[i][5] * training_data[i][3])
+
+  }
+
+  let groupedTrainings = Object.values(workoutsMap);
+  //let jsonString = JSON.stringify(groupedTrainings, null, 2);
+  //console.log(jsonString)
+  return {
+    settings:{
+      prepSeconds: 20, // Количество секунд, перед тренировкой, этап подготовки
+      overtimeFactor: 0.2, // Мультипликатор для перетренерованности
+      currentStreak: 22, // Текущая серия подряд
+      maxStreak: 50 // максимальная серия за все время
+    },
+    workouts: groupedTrainings
+  }
 }
 
 // Список тренировок для клиента
 function get_data_from_server(){
   // ВАЖНО АЙДИШНИКИ ДОЛЖНЫ БЫТЬ УНИКАЛЬНЫЕ!!!
-  /*
-   timer = new Timer(20, 900, 0.2);
-   // пред подготовка, глобальные настроки
-   // время работы, основная тренировка или запущенная
-   // Коофицыент это глоабалная натсройка
-  
-   */
   return {
     settings:{
       prepSeconds: 20, // Количество секунд, перед тренировкой, этап подготовки
@@ -374,7 +457,17 @@ function findLongestStreak(){
 
 
 
+// вместо showModalDialog — точка входа для веб-приложения
+// Интересно, изучить
+// https://script.google.com/macros/s/AKfycbw9gtUNJ7I05sc0zgTXl3ielhy3s_t8hysSisWK3Wbt26Vabhyqfj6exGiygFWOHB-B/exec
 
+/*
+function doGet() {
+  return HtmlService.createHtmlOutputFromFile('prod/training-client')
+    .setTitle('Тренировка')
+    .addMetaTag('viewport', 'width=device-width, initial-scale=1, viewport-fit=cover')
+    .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
+}*/
 
 
 

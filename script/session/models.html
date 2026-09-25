@@ -1,0 +1,614 @@
+<script>
+
+/**
+ * Создаёт объект упражнения, хранит информацию об упражнении. Например,
+ * упражнение — это отжимания или подтягивания на турнике.
+ *
+ * @category model
+ * @param {Object} data - сырые данные упражнения
+ * @param {Number} data.id - порядковый номер упражнения (уникальный)
+ * @param {String} data.name - название упражнения
+ * @param {Number} data.reps - количество повторений
+ * @param {Number} data.weight - дополнительный вес
+ * @param {Number} data.time - время выполнения всех повторений
+ * @param {String} data.photo_small - ссылка на фото, 45×45px
+ * @param {String} data.photo_large - ссылка на фото, 485×365px
+ *
+ * @property {Number} sets - количество выполненных подходов, изначально 0;
+ *   меняется через changeSets() в WorkoutSession
+ * @property {String} photoSmall - фото 45×45px; если photo_small не передан,
+ *   используется заглушка https://placehold.co/45x45
+ * @property {String} photoLarge - фото 485×365px; если photo_large не передан,
+ *   используется заглушка https://placehold.co/485x365
+ */
+class Exercise {
+  constructor({id, name, reps, weight, time, photo_small, photo_large}){
+    this.id = id
+    this.name = name || "Название не указано";
+    this.reps = Number(reps) || 0;
+    this.weight = Number(weight) || 0;
+    this.time = Number(time) || 0;
+    this.photoSmall = photo_small || "https://placehold.co/45x45?text=0";
+    this.photoLarge = photo_large || "https://placehold.co/485x365?text=0";
+    
+    // Сколько подходов выполнено, отмечаеться пользователем
+    this.sets = 0; 
+  }
+}
+
+
+/** ОБНОВИТь ⛔️
+ * Создаёт объект тренировки, хранит информацию о тренировке и
+ * списке всех упражнений, которые в неё входят (Exercise).
+ *
+ * @category model
+ * @param {Object} data - сырые данные тренировки
+ * @param {Number} data.id - уникальный идентификатор тренировки
+ * @param {String} data.name - название тренировки
+ * @param {Boolean} data.archived - архивирована ли тренировка (не показывается в переключателе)
+ * @param {Array<Object>} data.exercises - список сырых данных упражнений,
+ *   каждый элемент будет превращён в экземпляр Exercise
+ *
+ * @property {Array<Exercise>} exercises - список упражнений тренировки,
+ *   уже как готовые экземпляры класса Exercise (не сырые данные)
+ */
+class Workout{
+  constructor({id, name, archived, time, exercises}){
+    this.id = id
+    this.name = name;
+    this.archived = archived;
+    this.time = time;
+    this.exercises = [];
+
+    for(let i = 0; i < exercises.length; i ++){
+      this.exercises.push(new Exercise(exercises[i]))
+    }
+  }
+
+  /**
+   * Находит упражнение по его id.
+   * 
+   * @category model
+   * @param {Number} id - id упражнения
+   * @returns {Exercise|undefined} - найденное упражнение, или undefined, если не найдено
+   * 
+  */
+  getExerciseById(id){
+    for(let i = 0; i < this.exercises.length; i++){
+      if(this.exercises[i].id === id) return this.exercises[i]
+    }
+  }
+
+  /**
+   * Находит порядковый номер упражнения в списке по его id.
+   * Используется для навигации "След."/"Пред." в карточке упражнения.
+   * 
+   * @category model
+   * @param {Number} id - id упражнения
+   * @returns {Number|undefined} - индекс упражнения в массиве exercises, или undefined
+  */
+  getElementPositionById(id){
+    for(let i = 0; i < this.exercises.length; i++){
+      if(this.exercises[i].id === id) return i
+    }
+  }
+}
+
+
+/**
+ * Снимок выполненного упражнения. Наследует Exercise и копирует в себя
+ * все его поля через Object.assign — так получается независимая копия
+ * (не ссылка), зафиксированная на момент выполнения. Это нужно, потому что
+ * одно и то же упражнение пользователь может выполнить несколько раз за
+ * тренировку с разными повторениями и весом — каждый подход должен хранить
+ * свои собственные показатели, а не общую ссылку на исходное упражнение.
+ *
+ * @category model
+ * @extends Exercise
+ * @param {Exercise} exercise - экземпляр упражнения, с которого делается снимок
+ *
+ * @property {String} comment - комментарий к выполнению этого подхода, изначально пустой
+ * @property {Date} dateEnd - дата и время выполнения подхода, фиксируется в момент создания
+ * @property {Number} complexityAssessment - оценка сложности подхода от 1 до 100, изначально 1
+ */
+class CompletedExercise extends Exercise {
+  constructor(exercise) {
+    // Обязательный вызов пустого super(), чтобы инициализировать класс-родитель
+    super({}); 
+
+    // Копируем абсолютно все свойства из переданного экземпляра Exercise
+    // Нужно сделать снимок упражнения, без ссылки на упражнения
+    Object.assign(this, exercise);
+
+    this.comment = '';
+    this.dateEnd = new Date();
+    this.complexityAssessment = 1;
+  }
+
+  /**
+   * Устанавливает оценку сложности выполненного подхода.
+   *
+   * @category model
+   * @param {Number} value - оценка сложности от 1 до 100
+   */
+  setComplexityAssessment(value){
+    this.complexityAssessment = value;
+  }
+
+  /**
+   * Устанавливает комментарий к выполненному подходу.
+   *
+   * @category model
+   * @param {String} value - текст комментария
+   */
+  setComment(value){
+    this.comment = value;
+  }
+}
+
+
+/**
+ * Хранит и рассчитывает итоговые данные выполненной тренировки: время
+ * старта/финиша, длительность, список выполненных подходов (CompletedExercise),
+ * суммарные показатели (сеты, уникальные упражнения, поднятый вес), а также
+ * оценку сложности и комментарий, которые пользователь ставит по завершении.
+ *
+ * @category model
+ *
+ * @property {Date|null} dateStart - момент начала тренировки, null до первого старта
+ * @property {Date|null} dateEnd - момент завершения тренировки, null до финиша
+ * @property {Number|null} duration - длительность тренировки в миллисекундах, null до финиша
+ * @property {Number} countSet - количество выполненных сетов (одна запись exercise = один сет)
+ * @property {Number} countUniqueExercises - количество уникальных упражнений в тренировке
+ * @property {Number} totalWeightLifted - суммарный поднятый вес (reps * weight по всем сетам)
+ * @property {Array<CompletedExercise>} exercise - список выполненных подходов
+ * @property {Number} complexityAssessment - оценка сложности тренировки от 1 до 100, изначально 20
+ * @property {String} comment - комментарий к тренировке
+ */
+class CompletedWorkout{
+  constructor(){
+    this.dateStart = null;
+    this.dateEnd = null;
+    this.duration = null;
+    this.countSet = 0;
+    this.countUniqueExercises = 0;
+    this.totalWeightLifted = 0;
+    this.exercise = [];
+     this.complexityAssessment = 20;
+    this.comment;
+  }
+
+  /**
+   * Устанавливает время начала тренировки. Срабатывает только один раз —
+   * повторные вызовы (например, после паузы) ничего не меняют.
+   *
+   * @category model
+   */
+  setDateStart(){
+    if(this.dateStart === null) this.dateStart = new Date();
+  }
+
+  /**
+   * Устанавливает время завершения тренировки. Срабатывает только один раз.
+   *
+   * @category model
+   */
+  setDateEnd(){
+    if(this.dateEnd === null) this.dateEnd = new Date();
+  }
+
+  /**
+   * Рассчитывает длительность тренировки в миллисекундах как разницу
+   * dateEnd - dateStart. Требует, чтобы обе даты уже были установлены.
+   *
+   * @category model
+   */
+  setDuration(){
+    this.duration = this.dateEnd - this.dateStart;
+  }
+
+  /**
+   * Рассчитывает количество выполненных сетов — одна запись в exercise
+   * соответствует одному сету.
+   *
+   * @category model
+   */
+  calculateSetCount(){
+    this.countSet = this.exercise.length
+  }
+
+  /**
+   * Рассчитывает количество уникальных упражнений среди выполненных сетов
+   * (упражнение может повторяться несколько раз за тренировку).
+   *
+   * @category model
+   */
+  calculateCountUniqueExercises(){
+    let uniq = []
+    for(let i = 0; i < this.exercise.length; i++){
+      if(!uniq.includes(this.exercise[i].id)){
+        uniq.push(this.exercise[i].id)
+      }
+    }
+    this.countUniqueExercises = uniq.length;
+  }
+
+  /**
+   * Рассчитывает суммарный поднятый вес по всем выполненным сетам
+   * (сумма reps * weight каждого подхода).
+   *
+   * @category model
+   */
+  calculateTotalWeightLifted(){
+    for(let i = 0; i < this.exercise.length; i++){
+      this.totalWeightLifted += this.exercise[i].reps * this.exercise[i].weight
+    }
+  }
+
+  /**
+   * Фиксирует новый выполненный подход — создаёт снимок (CompletedExercise)
+   * переданного упражнения и добавляет его в список.
+   *
+   * @category model
+   * @param {Exercise} exercise - экземпляр упражнения, которое выполнили
+   */
+  addExercise(exercise){
+    this.exercise.push(new CompletedExercise(exercise))
+  }
+
+  /**
+   * Удаляет последнюю запись выполненного подхода с указанным id упражнения
+   * (используется при отмене сета — поиск идёт с конца списка).
+   *
+   * @category model
+   * @param {Number} id - id упражнения
+   */
+  delExerciseById(id){
+    for(let i = this.exercise.length - 1; i >= 0; i--){
+      if(id === this.exercise[i].id){
+        this.exercise.splice(i, 1);
+        break;
+      }
+    }
+  }
+
+  /**
+   * Устанавливает общую оценку сложности тренировки.
+   *
+   * @category model
+   * @param {Number} value - оценка сложности от 1 до 100
+   */
+  setComplexityAssessment(value){
+    this.complexityAssessment = value
+  }
+
+  /**
+   * Устанавливает комментарий к тренировке.
+   *
+   * @category model
+   * @param {String} value - текст комментария
+   */
+  setComment(value){
+    this.comment = value;
+  }
+
+  /**
+   * Рассчитывает все итоговые показатели тренировки разом: фиксирует
+   * дату финиша, длительность, количество сетов, уникальных упражнений
+   * и суммарный поднятый вес. Вызывается один раз, по завершении тренировки.
+   *
+   * @category model
+   */
+  calculateTotal(){
+    this.setDateEnd();
+    this.setDuration();
+    this.calculateSetCount();
+    this.calculateCountUniqueExercises();
+    this.calculateTotalWeightLifted();
+  }
+}
+
+
+/**
+ * Центральное хранилище состояния приложения (что-то вроде store) — держит
+ * список всех тренировок, текущую активную тренировку и упражнение, текущий
+ * вид отображения (таблица/список/карточка), а также лог выполненной
+ * тренировки (completedWorkout). Всё управление данными тренировки идёт
+ * через методы этого класса.
+ *
+ * @category model
+ * @param {Array<Object>} workouts - список сырых данных тренировок,
+ *   каждый элемент превращается в экземпляр Workout
+ *
+ * @property {Array<Workout>} workouts - список тренировок сессии
+ * @property {'table'|'list'|'carousel'} view - текущий вид отображения упражнений
+ * @property {Workout} activeWorkout - тренировка, которая сейчас открыта пользователем
+ * @property {Number} activeExerciseId - id упражнения, активного сейчас в карточке (для view: carousel)
+ * @property {Number} totalSets - суммарное количество выполненных сетов за сессию
+ * @property {CompletedWorkout} completedWorkout - лог выполненных действий текущей тренировки
+ * @property {'main'|'end'} pageWiew - текущая отображаемая страница: тренировка или итоги
+ */
+class WorkoutSession {
+  constructor(workouts){
+    this.workouts = [];
+    this.view = "table"
+
+    for(let i = 0; i < workouts.length; i++){
+      this.workouts.push(new Workout(workouts[i]))
+    }
+
+    this.activeWorkout = this.workouts[0]
+    this.activeExerciseId = this.activeWorkout.exercises[0].id
+    this.totalSets = 0
+    this.completedWorkout = new CompletedWorkout();
+    this.pageWiew = 'main';
+  }
+
+  /**
+   * Переключает активную тренировку по её id. Если тренировка найдена,
+   * также сбрасывает активное упражнение на первое в её списке.
+   *
+   * @category model
+   * @param {String} id - id тренировки для поиска
+   */
+  setActiveWorkoutByid(id){
+    for(let i = 0; i < this.workouts.length; i++){
+      if(this.workouts[i].id === id){
+        this.activeWorkout = this.workouts[i];
+        // id активного упражнения первый из списка
+        this.activeExerciseId = this.activeWorkout.exercises[0].id
+        return;
+      }
+    }
+    console.warn(`Тренировка "${id}" не найдена в сессии (id)`);
+  }
+
+  /**
+   * Устанавливает текущий вид отображения упражнений.
+   *
+   * @category model
+   * @param {'table'|'list'|'carousel'} name - название вида
+   */
+  setView(name){
+    this.view = name
+  }
+
+   /**
+   * Смещает активное упражнение на предыдущее в списке. При выходе
+   * за начало списка переходит на последнее упражнение (зацикливание).
+   *
+   * @category model
+   */
+  setPrevIdExercise(){
+    let list = this.activeWorkout.exercises
+    let position = this.activeWorkout.getElementPositionById(this.activeExerciseId)
+    position = position - 1;
+    if(position < 0 ) position = list.length - 1
+    this.activeExerciseId = list[position].id;
+  }
+
+  /**
+   * Смещает активное упражнение на следующее в списке. При выходе
+   * за конец списка переходит на первое упражнение (зацикливание).
+   *
+   * @category model
+   */
+  setNextIdExercise(){
+    const list = this.activeWorkout.exercises;
+    let position = this.activeWorkout.getElementPositionById(this.activeExerciseId);
+    position = position + 1;
+    if(position >= list.length){ position = 0; }
+    this.activeExerciseId = list[position].id;
+  }
+
+
+  /**
+   * Находит упражнение по id в активной тренировке и устанавливает
+   * новое значение количества повторений.
+   *
+   * @category model
+   * @param {Number} exerciseId - id упражнения
+   * @param {Number} value - новое количество повторений
+   */
+  setReps(exerciseId, value){
+    for(let i = 0; i < this.activeWorkout.exercises.length; i++){
+      if(this.activeWorkout.exercises[i].id === exerciseId){
+        this.activeWorkout.exercises[i].reps = value;
+        return;
+      }
+    }
+  }
+
+  /**
+   * Находит упражнение по id в активной тренировке и устанавливает
+   * новое значение рабочего веса.
+   *
+   * @category model
+   * @param {Number} exerciseId - id упражнения
+   * @param {Number} value - новое значение веса
+   */
+  setWeight(exerciseId, value){
+    for(let i = 0; i < this.activeWorkout.exercises.length; i++){
+      if(this.activeWorkout.exercises[i].id === exerciseId){
+        this.activeWorkout.exercises[i].weight = value;
+        return;
+      }
+    }
+  }
+
+  /**
+   * Увеличивает или уменьшает количество выполненных сетов у упражнения.
+   * При первом сете (delta === 1, было 0) автоматически переключает
+   * активное упражнение на следующее — так одно и то же упражнение можно
+   * выполнить несколько раз, не застревая на нём в интерфейсе.
+   * Синхронно ведёт лог в completedWorkout: при +1 добавляет запись
+   * о выполненном подходе, при -1 удаляет последнюю такую запись.
+   * Не даёт уйти в минус — если сетов 0, а delta === -1, ничего не делает.
+   *
+   * @category model
+   * @param {Number} exerciseId - id упражнения
+   * @param {Number} delta - на сколько изменить количество сетов (1 или -1)
+   */
+  changeSets(exerciseId, delta){
+    for(let i = 0; i < this.activeWorkout.exercises.length; i++){
+      if(this.activeWorkout.exercises[i].id === exerciseId){
+        if(this.activeWorkout.exercises[i].sets === 0 && delta === -1) return;
+        this.totalSets += delta;
+        if(this.activeWorkout.exercises[i].sets === 0 && delta === 1) this.setNextIdExercise();
+        this.activeWorkout.exercises[i].sets += delta;
+
+        if(delta === 1){
+          this.completedWorkout.addExercise(this.activeWorkout.exercises[i])
+        }else{
+          this.completedWorkout.delExerciseById(exerciseId)
+        }
+        return;
+      }
+    }
+  }
+}
+
+
+/** ОБНОВИТЬ!!! ⛔️
+ * Таймер тренировки с тремя фазами — подготовка, тренировка, перетренированность
+ * (превышение планового времени). Работает через setInterval с шагом в секунду
+ * и уведомляет внешний код о каждом тике через callback onTick, который нужно
+ * подключить снаружи (instance.onTick = function(t){...}).
+ *
+ * @category model
+ * @param {Number} prepSeconds - время подготовки, сек
+ * @param {Number} trainSeconds - время тренировки, сек
+ * @param {Number} overtimeFactor - коэффициент допустимого перетренировки
+ *   (доля от trainSeconds, например 0.2 = 20% сверх тренировочного времени)
+ *
+ * @property {Number} prepSeconds - время подготовки, сек
+ * @property {Number} trainSeconds - время тренировки, сек
+ * @property {Number} overtimeFactor - коэффициент перетренировки
+ * @property {Number} totalSeconds - общая длительность таймера (prep + train + overtime), сек
+ * @property {Number} currentSeconds - сколько секунд уже прошло с начала отсчёта
+ * @property {Number|null} intervalId - id таймера setInterval; null, если таймер не запущен
+ * @property {Function|null} onTick - callback, вызывается каждую секунду с this в качестве аргумента;
+ *   null, пока не подключён снаружи
+ */
+class Timer{
+  constructor(prepSeconds, overtimeFactor){
+    this.prepSeconds = prepSeconds;
+    this.trainSeconds = null;
+    this.overtimeFactor = overtimeFactor;
+    this.totalSeconds = null;
+
+    this.currentSeconds = 0;
+    this.intervalId = null;
+    this.onTick = null;
+
+    this.isBuild = false
+  }
+
+  // ⛔️
+  // Первый запуск тренировки
+  // Определяеться на основе первой запущеной тренировки,
+  // Мы не знаем сколько времени будет длиться тренировка, пока пользовалеь не выбирет ее и не запустит
+  build(trainSeconds){
+    if(!this.isBuild){
+      this.trainSeconds = trainSeconds;
+      this.totalSeconds = Math.ceil(this.prepSeconds + trainSeconds + (trainSeconds * this.overtimeFactor));
+      this.isBuild = true
+    }
+    
+  }
+
+  /**
+   * Проверяет, запущен ли таймер сейчас.
+   *
+   * @category model
+   * @returns {Boolean} true, если таймер работает (intervalId установлен)
+   */
+  isRunning(){
+    return this.intervalId !== null;
+  }
+
+  /**
+   * Определяет текущую фазу тренировки на основе прошедшего времени.
+   *
+   * @category model
+   * @returns {'prep'|'train'|'overtrain'} текущая фаза
+   */
+  getPhase(){
+    if(this.currentSeconds <= this.prepSeconds) return "prep";
+    if(this.currentSeconds <= this.prepSeconds + this.trainSeconds) return "train";
+    return "overtrain"
+  }
+
+  /**
+   * Рассчитывает прогресс таймера в процентах от общей длительности,
+   * для отображения на полосе загрузки. Не превышает 100.
+   *
+   * @category model
+   * @returns {String} процент прогресса, с двумя знаками после запятой
+   */
+  getPercent(){
+    return Math.min(100, (this.currentSeconds / this.totalSeconds) * 100).toFixed(2);
+  }
+
+  /**
+   * Запускает таймер — каждую секунду увеличивает currentSeconds
+   * и вызывает onTick, если он подключён. Повторный вызов на уже
+   * запущенном таймере ничего не делает.
+   *
+   * @category model
+   */
+  start(){
+    if(this.isRunning()) return; // Если уже работает то ничего не делать
+    this.intervalId = setInterval(() => {
+      this.currentSeconds += 1;
+      // ===== Паттерн колбэка (callback), 3 шага =====
+      // 1. Свойство-"розетка" под функцию. Пока null — снаружи её ещё не подключили.
+      // 2. Кто-то снаружи присваивает сюда свою функцию: instance.onTick = function(t){...}
+      // 3. Внутри класса зовём эту функцию и передаём ей "this" — ссылку на ТЕКУЩИЙ
+      // экземпляр, чтобы колбэк знал, чьи это данные (важно, если экземпляров
+      // несколько и у всех один и тот же колбэк).
+      if (this.onTick) this.onTick(this);
+      
+    }, 1000)
+  }
+
+  /**
+   * Ставит таймер на паузу — останавливает интервал, currentSeconds
+   * сохраняет текущее значение (не сбрасывается).
+   *
+   * @category model
+   */
+  pause(){
+    clearInterval(this.intervalId);
+    this.intervalId = null;
+  }
+
+  /**
+   * Полностью останавливает таймер — останавливает интервал
+   * и сбрасывает currentSeconds в 0.
+   *
+   * @category model
+   */
+  stop(){
+    this.pause()
+    this.currentSeconds = 0;
+  }
+
+  /**
+   * Форматирует количество секунд в строку вида ЧЧ:ММ:СС.
+   *
+   * @category model
+   * @param {Number} totalSeconds - количество секунд
+   * @returns {String} время в формате ЧЧ:ММ:СС
+   */
+  static formatTime(totalSeconds){
+    let h = String(Math.floor(totalSeconds / 3600)).padStart(2, '0');
+    let m = String(Math.floor((totalSeconds % 3600) / 60)).padStart(2, '0');
+    let s = String(totalSeconds % 60).padStart(2, '0');
+    return `${h}:${m}:${s}`; 
+  }
+}
+
+
+
+</script>
