@@ -106,7 +106,7 @@ function renderStepperControl(id, sets){
 }
 
 
-/**
+/** ⛔️
  * Строит и вставляет в дебаг-панель дерево всего объекта session —
  * позволяет наглядно видеть текущее состояние приложения целиком.
  *
@@ -117,6 +117,9 @@ function renderTree(){
   let loadStatus = document.getElementById("loadStatus");
   loadStatus.innerHTML = "";
   loadStatus.appendChild(tree);
+
+  let treeTimer = buildTree(timer, "time")
+  loadStatus.appendChild(treeTimer);
 }
 
 

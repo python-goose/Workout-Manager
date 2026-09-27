@@ -78,13 +78,13 @@ function get_data_from_server_pro(){
       name: training_data[i][2],
       reps: training_data[i][3],
       weight: training_data[i][4],
-      time: Number(training_data[i][5] * training_data[i][3]),
-      time_one_ex: training_data[i][5],
+      time: Number(training_data[i][5]),
       photo_small: photo,
       photo_large: photo,
     })
 
-    workoutsMap[training_data[i][1]].time += Number(training_data[i][5] * training_data[i][3])
+    // + 20 это отдых для кадого подхода, пока что константа одна для всех упражнений
+    workoutsMap[training_data[i][1]].time += Number(training_data[i][5]) + 20
 
   }
 
@@ -93,7 +93,7 @@ function get_data_from_server_pro(){
   //console.log(jsonString)
   return {
     settings:{
-      prepSeconds: 20, // Количество секунд, перед тренировкой, этап подготовки
+      prepSeconds: 10, // Количество секунд, перед тренировкой, этап подготовки
       overtimeFactor: 0.2, // Мультипликатор для перетренерованности
       currentStreak: 22, // Текущая серия подряд
       maxStreak: 50 // максимальная серия за все время

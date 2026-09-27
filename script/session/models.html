@@ -487,7 +487,7 @@ class WorkoutSession {
  *
  * @category model
  * @param {Number} prepSeconds - время подготовки, сек
- * @param {Number} trainSeconds - время тренировки, сек
+ * @param {Number} trainSeconds - время тренировки, сек (сумма всех упржнений и их отдыха)
  * @param {Number} overtimeFactor - коэффициент допустимого перетренировки
  *   (доля от trainSeconds, например 0.2 = 20% сверх тренировочного времени)
  *
@@ -521,7 +521,24 @@ class Timer{
   build(trainSeconds){
     if(!this.isBuild){
       this.trainSeconds = trainSeconds;
-      this.totalSeconds = Math.ceil(this.prepSeconds + trainSeconds + (trainSeconds * this.overtimeFactor));
+      /**
+      * Расчёт общего времени тренировки.
+      *
+      * trainSeconds — суммарное время всех упражнений и отдыха между ними.
+      * prepSeconds  — подготовительное время перед стартом (отсчёт 5-4-3-2-1).
+      * overtimeFactor — доля "запаса" сверх основного времени тренировки (0.2 = 20%).
+      *
+      * По задумке, (prepSeconds + trainSeconds) — это лишь 80% от общего времени
+      * тренировки (1 - overtimeFactor = 0.8). Оставшиеся 20% — это "буфер"
+      * на непредвиденные задержки/перетренировку.
+      *
+      * Чтобы восстановить полные 100% из известных 80%, сумму нужно РАЗДЕЛИТЬ
+      * на 0.8 | 100 / 0.8 = 125  (верно: 100 — это именно 80% от 125)
+      *
+      * Итог округляется вверх (Math.ceil), чтобы не потерять секунды
+      * из-за дробного результата деления.
+      */
+      this.totalSeconds = Math.ceil((this.prepSeconds + trainSeconds) / (1 - this.overtimeFactor));
       this.isBuild = true
     }
     
