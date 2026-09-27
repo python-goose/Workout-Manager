@@ -50,6 +50,7 @@ function onStartClick(){
   timer.build(session.activeWorkout.time)
   timer.start()
   updateTimerControls()
+  updateBarLine() // Отрисовать границы на прогрес баре один раз при нажатии старт, когда тренировка выбрана
 }
 
 
