@@ -8,6 +8,10 @@ const DEFAULT_SETTINGS = {
   workoutSession_restTimeSec: 20,              // Время отдыха между подходами / сетами (в секундах)
   workoutSession_overtrainingMultiplier: 0.2,  // Мультипликатор перетренированности (0.2 = запас 20% к итоговому времени)
   workoutSession_exerciseViewMode: "table",    // Вид отображения списка упражнений: "table" | "list" | "card"
+  workoutSession_activeWorkout: "",
+  workoutSession_listWorkout: ["", "workout_1", "workout_2", "workout_3", "workout_4"], // Пустая строка всегда должна быть, это "не выбрано"
+
+  developer_DebugPanel: false,
 
   style_theme_color: "light",                  // Стиль темы будстрап "light" | "dark"
 
