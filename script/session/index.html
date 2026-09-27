@@ -52,9 +52,10 @@
       <!-- ================= ТАЙМЕР ================= -->
       <div id="TimeView" class="card shadow-sm mb-2">
         <div class="card-body text-center">
-          <div class="display-4 fw-bold mt-4 mb-4" id="timer_text">00:00:00</div>
-
-          <div class="progress" style="height: 25px">
+          <!-- 4 -->
+          <div class="display-4 fw-bold mt-2 mb-2" id="timer_text">00:00:00</div>
+          <!-- 25 -->
+          <div class="progress" style="height: 15px">
             <div id="line-first" class="progress-line"></div>
             <div id="line-second" class="progress-line"></div>
             <div id="my_progress" class="progress-bar progress-bar-striped progress-bar-animated bg-warning" style="width: 0%">0%</div>
@@ -65,11 +66,11 @@
             <span>Тренировка</span>
             <span>Перетренированность</span>
           </div>
-
-          <div class="btn-group w-100 mt-3" role="group">
-            <button class="btn btn-success" id="start_timer" style="flex:1 1 0;"><i class="bi bi-play-fill"></i> <span id="btnStartLabel">Старт</span></button>
-            <button class="btn btn-warning" id="pause_timer" style="flex:1 1 0;" disabled><i class="bi bi-pause-fill"></i> Пауза</button>
-            <button class="btn btn-danger" id="stop_timer" style="flex:1 1 0;" disabled><i class="bi bi-stop-fill"></i> Финиш</button>
+          <!-- 3 -->
+          <div class="btn-group w-100 mt-2" role="group">
+            <button class="btn btn-success p-1" id="start_timer" style="flex:1 1 0;"><i class="bi bi-play-fill"></i> <span id="btnStartLabel">Старт</span></button>
+            <button class="btn btn-warning p-1" id="pause_timer" style="flex:1 1 0;" disabled><i class="bi bi-pause-fill"></i> Пауза</button>
+            <button class="btn btn-danger p-1" id="stop_timer" style="flex:1 1 0;" disabled><i class="bi bi-stop-fill"></i> Финиш</button>
           </div>
         </div>
       </div>
