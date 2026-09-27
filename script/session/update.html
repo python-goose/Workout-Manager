@@ -97,6 +97,7 @@ function updateCard() {
   // Поле ввода для повторений и весов, добавляю span, если они будут не в одном контейнере то будет перенос строки
   document.getElementById("ccFieldsWrapReps").innerHTML = '<span class="input-group-text">Повт</span>' + renderInputNumber("reps", ex.id, ex.reps);
   document.getElementById("ccFieldsWrapWeight").innerHTML = '<span class="input-group-text">Кг</span>' + renderInputNumber("weight", ex.id, ex.weight);
+  document.getElementById("ccFieldsWrapTime").innerHTML = '<span class="input-group-text">Сек</span>' + renderInputNumber("time", ex.id, ex.time);
 
   // Кнопки управления сетами, +1 и -1
   document.getElementById('ccStepperWrap').innerHTML = renderStepperControl(ex.id, ex.sets);

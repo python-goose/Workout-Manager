@@ -161,7 +161,7 @@ function renderTable() {
         </td>
         <td>${renderInputNumber("reps", ex.id, ex.reps)}</td>
         <td>${renderInputNumber("weight", ex.id, ex.weight)}</td>
-        <td class="text-secondary">${ex.time}с</td>
+        <td>${renderInputNumber("time", ex.id, ex.time)}</td>
         <td>${renderStepperControl(ex.id, ex.sets)}</td>
       </tr>`;
   }
@@ -231,7 +231,10 @@ function renderList() {
               <span class="input-group-text">Кг</span>
               ${renderInputNumber("weight", ex.id, ex.weight)}
             </div>
-            <span class="text-secondary small">${ex.time}с</span>
+            <div class="input-group input-group-sm" style="width:100px;">
+              <span class="input-group-text">Сек</span>
+              ${renderInputNumber("time", ex.id, ex.time)}
+            </div>
           </div>
         </div>
         ${renderStepperControl(ex.id, ex.sets)}

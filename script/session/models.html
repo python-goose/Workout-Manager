@@ -436,6 +436,16 @@ class WorkoutSession {
     }
   }
 
+  // ⛔️ Установить время выполнения упражнения
+  setTime(exerciseId, value){
+    for(let i = 0; i < this.activeWorkout.exercises.length; i++){
+      if(this.activeWorkout.exercises[i].id === exerciseId){
+        this.activeWorkout.exercises[i].time = value;
+        return;
+      }
+    }
+  }
+
   /**
    * Увеличивает или уменьшает количество выполненных сетов у упражнения.
    * При первом сете (delta === 1, было 0) автоматически переключает

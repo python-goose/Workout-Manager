@@ -94,12 +94,13 @@ function onStopClick(){
  */
 function onExerciseValueChange(event){
   let target = event.target;
-  if(target.name !== "weight" && target.name !== "reps") return;
+  if(target.name !== "weight" && target.name !== "reps" && target.name !== "time") return;
 
   let id = Number(target.dataset.id)
 
   if(target.name === "weight"){session.setWeight(id, Number(target.value))}
   if(target.name === "reps"){session.setReps(id, Number(target.value))}
+  if(target.name === "time"){session.setTime(id, Number(target.value))}
 }
 
 
