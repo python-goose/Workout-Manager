@@ -29,6 +29,7 @@
           <a class="list-group-item list-group-item-action" href="#section-profile"><i class="bi bi-person"></i> Профиль</a>
           <a class="list-group-item list-group-item-action" href="#section-session"><i class="bi bi-stopwatch"></i> Тренировка и таймер</a>
           <a class="list-group-item list-group-item-action" href="#section-theme"><i class="bi bi-palette"></i> Стилизация</a>
+          <a class="list-group-item list-group-item-action" href="#section-developer"><i class="bi bi-code-slash"></i> Разработчик</a>
           <a class="list-group-item list-group-item-action" href="#section-data"><i class="bi bi-database"></i> Данные</a>
         </div>
       </div>
@@ -117,9 +118,9 @@
               <div class="form-text">Сколько процентов сверх планового времени тренировки допускается, прежде чем шкала перейдёт в фазу «Перетренированность».</div>
             </div>
 
-            <div class="mb-1">
-              <label class="form-label small fw-semibold mb-1">Вид упражнений по умолчанию</label>
-              <div class="btn-group ms-2" role="group" aria-label="Вид по умолчанию">
+            <div class="mb-3">
+              <label class="d-block form-label small fw-semibold mb-1">Вид упражнений по умолчанию</label>
+              <div class="btn-group" role="group" aria-label="Вид по умолчанию">
                 <input type="radio" class="btn-check" name="settingsDefaultView" id="settingsViewTable" checked>
                 <label class="btn btn-outline-secondary btn-sm" for="settingsViewTable"><i class="bi bi-table"></i> Таблица</label>
 
@@ -130,6 +131,15 @@
                 <label class="btn btn-outline-secondary btn-sm" for="settingsViewCarousel"><i class="bi bi-images"></i> Карточка</label>
               </div>
             </div>
+
+            <!-- Добавить в конец блока "Тренировка и таймер" (#section-session), после блока "Вид упражнений по умолчанию" -->
+            <div class="mb-1">
+              <label class="form-label small fw-semibold mb-1" for="settingsDefaultWorkout">Активная тренировка по умолчанию</label>
+              <select class="form-select" id="settingsDefaultWorkout" style="max-width:220px;">
+              </select>
+              <div class="form-text">Выбранная тренировка автоматически станет активной при открытии сессии. Если не указана — по умолчанию используется первая тренировка из списка.</div>
+            </div>
+
           </div>
         </div>
 
@@ -146,6 +156,20 @@
               </select>
               <div class="form-text">Выберите оформление интерфейса приложения.</div>
             </div>
+          </div>
+        </div>
+
+
+        <!-- ================= Разработчик ================= -->
+        <div id="section-developer" class="card shadow-sm mb-4">
+          <div class="card-body">
+            <h5 class="card-title mb-3"><i class="bi bi-code-slash"></i> Разработчик</h5>
+
+            <div class="form-check form-switch">
+              <input class="form-check-input" type="checkbox" role="switch" id="settingsDebugPanel">
+              <label class="form-check-label" for="settingsDebugPanel">Показывать отладочную панель</label>
+            </div>
+            <div class="form-text">Отладочная панель отображает внутренние данные приложения (состояние сессии, таймера и т.д.) для диагностики проблем.</div>
           </div>
         </div>
 
@@ -208,6 +232,19 @@
       document.getElementById("settingsThemeSelect").value = settings.style_theme_color;
       document.documentElement.setAttribute("data-bs-theme", settings.style_theme_color)
       document.getElementById("settingsLastSaved").textContent = settings.meta_lastSavedAt
+      document.getElementById("settingsDebugPanel").checked = settings.developer_DebugPanel
+      
+      // Если инени тренировки нету, то это тренировка "Не выбрано"
+      let html = ``
+      for(let i = 0; i < settings.workoutSession_listWorkout.length; i++){
+        let selected = ""
+        if(settings.workoutSession_listWorkout[i] === settings.workoutSession_activeWorkout){selected = "selected"}
+        let name = settings.workoutSession_listWorkout[i]
+        if (name === "") name = "Не выбрано"
+        html += `<option value="${name}" ${selected}>${name}</option>`
+      }
+      document.getElementById('settingsDefaultWorkout').innerHTML = html
+
       // Добавляем кастомный клласс который плавно покажет содержымое
       document.getElementById("mainContainer").classList.add("loaded")
     }
@@ -279,9 +316,12 @@
           profile_gender: document.getElementById("settingsGenderMale").checked ? "male" : "female",
           workoutSession_prepTimeSec: Number(document.getElementById("settingsPrepSeconds").value),
           workoutSession_restTimeSec: Number(document.getElementById("settingsRestSeconds").value),
-          workoutSession_overtrainingMultiplier: Number(document.getElementById("settingsOvertimeFactor").value) / 100,  
+          workoutSession_overtrainingMultiplier: Number(document.getElementById("settingsOvertimeFactor").value) / 100,
+          workoutSession_activeWorkout: document.getElementById("settingsDefaultWorkout").value,
+          workoutSession_listWorkout: settings.workoutSession_listWorkout,
           workoutSession_exerciseViewMode: document.getElementById("settingsViewTable").checked ? "table" : document.getElementById("settingsViewList").checked ? "list" : "card",
-          style_theme_color: document.getElementById("settingsThemeSelect").value
+          style_theme_color: document.getElementById("settingsThemeSelect").value,
+          developer_DebugPanel: document.getElementById("settingsDebugPanel").checked
       })
     })
 
