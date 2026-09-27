@@ -70,7 +70,7 @@ function buildTree(value, label){
 //  3. RENDER
 // ════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 
-/**
+/** ⛔️
  * Строит HTML-разметку поля ввода числа — используется для полей
  * "повторения" и "вес" в таблице, списке и карточке упражнения.
  *
@@ -143,7 +143,7 @@ function renderWorkoutSwitcher(){
 }
 
 
-/**
+/** ⛔️
  * Рисует табличное представление упражнений активной тренировки —
  * по одной строке на упражнение, с полями reps/weight и степпером сетов.
  * Выполненные упражнения (sets > 0) подсвечиваются зелёным.
@@ -154,8 +154,9 @@ function renderTable() {
   let html = '';
   for (let i = 0; i < session.activeWorkout.exercises.length; i++) {
     const ex = session.activeWorkout.exercises[i];
+    let rowClass = ex.sets > 0 ? 'table-success' : '';
     html += `
-      <tr class="${ex.sets > 0 ? 'table-success' : ''}">
+      <tr class="${rowClass}">
         <td><img src="${ex.photoSmall}" class="thumb rounded flex-shrink-0" alt="${ex.name}"></td>
         <td>
           <div class="fw-semibold">${ex.name}</div>

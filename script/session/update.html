@@ -46,7 +46,7 @@ function updateTimerCallback(t){
 }
 
 
-/**
+/** ⛔️
  * Позиционирует две разделительные линии на шкале прогресс-бара — они
  * отмечают границы между фазами "подготовка/тренировка" и
  * "тренировка/перетренированность", в процентах от общей длительности таймера.
@@ -54,9 +54,13 @@ function updateTimerCallback(t){
  * @category update
  */
 function updateBarLine(){
-  const stepPercent = 100 / timer.totalSeconds;
-  document.getElementById('line-first').style.left = (stepPercent * timer.prepSeconds) + '%';
-  document.getElementById('line-second').style.left = (stepPercent * (timer.prepSeconds + timer.trainSeconds)) + '%';
+  // Рисуем линии есть нажали кнопку старт и totalSeconds расчитан
+  if(timer.totalSeconds){
+    const stepPercent = 100 / timer.totalSeconds;
+    document.getElementById('line-first').style.left = (stepPercent * timer.prepSeconds) + '%';
+    document.getElementById('line-second').style.left = (stepPercent * (timer.prepSeconds + timer.trainSeconds)) + '%';
+  }
+  
 }
 
 
