@@ -3,7 +3,7 @@
 //  5. ОБРАБОТЧИКИ СОБЫТИЙ (ON) 
 // ════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 
-/**
+/** ⛔️
  * Реагирует на переключение активной тренировки в контейнере workoutSwitcher.
  * Игнорирует клики не по btn-check элементам (например, по обёртке контейнера).
  * Id новой тренировки берётся из data-workout-id нажатой кнопки.
@@ -12,8 +12,8 @@
  * @param {Event} event - событие change от контейнера workoutSwitcher
  */
 function onWorkoutChange(event){
-  if(!event.target.classList.contains("btn-check")){return;}
-  session.setActiveWorkoutByid(event.target.dataset.workoutId);
+  let value = event.target.value;
+  session.setActiveWorkoutByid(value);
   render();
 }
 

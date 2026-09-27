@@ -78,10 +78,7 @@
       <div id="WorkoutSwitcherView" class="d-flex justify-content-between align-items-center mb-2 flex-wrap gap-2">
 
         <div class="d-flex align-items-center gap-3 flex-wrap">
-          <!-- Кнопки-радио тренировок заполняются динамически (renderWorkoutSwitcher).
-               Слушаем change на всём контейнере; всё, что не btn-check, игнорируется. -->
-          <div id="workoutSwitcher" class="btn-group" role="group" aria-label="Тренировка">
-          </div>
+          <select id="workoutSwitcher" class="form-select form-select-sm" style="max-width: 250px; width: auto;"></select>
           <span class="text-secondary small">Выполнено сетов: <b id="totalSets">0</b></span>
         </div>
 

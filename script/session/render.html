@@ -123,7 +123,7 @@ function renderTree(){
 }
 
 
-/**
+/** ⛔️
  * Строит переключатель тренировок (кнопки-радио) — по одной кнопке
  * на каждую неархивированную тренировку. Активной помечается та, что
  * совпадает с session.activeWorkout.
@@ -136,9 +136,8 @@ function renderWorkoutSwitcher(){
     if(session.workouts[i].archived){continue;}
     let id = session.workouts[i].id
     let name = session.workouts[i].name
-    let checked = session.activeWorkout.id === id ? "checked": ""
-    html += `<input id="WorkoutSwitcher-${id}" type="radio" class="btn-check" name="workoutMode" ${checked} data-workout-id="${id}">
-    <label class="btn btn-outline-primary btn-sm" for="WorkoutSwitcher-${id}">${name}</label>`
+    let selected = session.activeWorkout.id === session.workouts[i].id ? "selected" : ""
+    html += `<option value="${id}" ${selected}>${name}</option>`
   }
   document.getElementById('workoutSwitcher').innerHTML = html
 }
