@@ -232,4 +232,52 @@ function updateComplexityBadge(){
   
 }
 
+// Кнопку сохранить тренировку переводит в режым в работе
+function updateSaveBTNinWork(){
+  document.getElementById("saveWorkoutBtn").innerHTML = ` <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>  Сохранение...`
+  document.getElementById("saveWorkoutBtn").disabled = true
+}
+
+// Кнопка сохранить тренировку, заблокирована данные сохранены
+function undateSaveBTNdone(){
+  let btn = document.getElementById("saveWorkoutBtn")
+  btn.innerHTML = ` <i class="bi bi-check2"></i> Сохранено`
+  btn.classList.remove("btn-primary")
+  btn.classList.add("btn-success")
+}
+
+// Обновляет максимальный стрик текущий и за все воремя
+function updateStrek(){
+  document.getElementById("currentStreak").innerHTML = `<i class="bi bi-fire text-danger"></i> ${inputConfig.settings.currentStreak}`;
+  document.getElementById("currentStreakTitle").textContent = `${pluralizeDays(inputConfig.settings.currentStreak)} подряд`;
+  document.getElementById("maxStreak").textContent = `Рекорд серии: ${inputConfig.settings.maxStreak} ${pluralizeDays(inputConfig.settings.maxStreak)}`;
+}
+
+
 </script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

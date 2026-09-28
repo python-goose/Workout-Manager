@@ -1,6 +1,7 @@
 <script>
 let session = null;
 let timer = null;
+let inputConfig = null;
 
 window.onload = function(){
   google.script.run
@@ -10,6 +11,7 @@ window.onload = function(){
 }
 
 function on_data_loader(config){
+  inputConfig = config
   session = new WorkoutSession(config.workouts);
   timer = new Timer(config.settings.prepSeconds, config.settings.overtimeFactor);
   timer.onTick = updateTimerCallback;

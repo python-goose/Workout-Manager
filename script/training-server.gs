@@ -91,12 +91,19 @@ function get_data_from_server_pro(){
   let groupedTrainings = Object.values(workoutsMap);
   //let jsonString = JSON.stringify(groupedTrainings, null, 2);
   //console.log(jsonString)
+
+  // Список истории тренировок, для расчета стрика
+  let workoutHistorySheet = ss.getSheetByName("workout_history");
+  let lastRow = workoutHistorySheet.getLastRow();
+  let rawDates = workoutHistorySheet.getRange(2, 2, lastRow - 1, 1).getValues();
+
   return {
     settings:{
       prepSeconds: 10, // Количество секунд, перед тренировкой, этап подготовки
       overtimeFactor: 0.2, // Мультипликатор для перетренерованности
-      currentStreak: 22, // Текущая серия подряд
-      maxStreak: 50 // максимальная серия за все время
+      currentStreak: calculateWorkoutStreak(rawDates), // Текущая серия подряд
+      maxStreak: findLongestStreak(rawDates), // максимальная серия за все время
+      heatmapMonths: calculateWorkoutHalfYear(rawDates), // данные для графика
     },
     workouts: groupedTrainings
   }
@@ -336,14 +343,11 @@ function getNextId(idColmn, sheet){
  * @category model
  * @returns {Number} количество дней подряд (текущая серия + сегодняшний день)
  */
-function calculateWorkoutStreak(){
-  let ss = SpreadsheetApp.getActiveSpreadsheet();
-  let workoutHistorySheet = ss.getSheetByName("workout_history");
-
-  let lastRow = workoutHistorySheet.getLastRow();
-
+function calculateWorkoutStreak(rawDates){
+  //let workoutHistorySheet = ss.getSheetByName("workout_history");
+  //let lastRow = workoutHistorySheet.getLastRow();
   // Получаем список дат с колонки B
-  let rawDates = workoutHistorySheet.getRange(2, 2, lastRow - 1, 1).getValues();
+  //let rawDates = workoutHistorySheet.getRange(2, 2, lastRow - 1, 1).getValues();
 
   // Пропускаем все пустые строки
   // Записываем в новый список [[]] -> []
@@ -381,7 +385,6 @@ function calculateWorkoutStreak(){
   }
 
   // Возвращаем текущую серию + сегодняшняя тренировка
-  console.log(streakCount)
   return streakCount
 }
 
@@ -393,14 +396,11 @@ function calculateWorkoutStreak(){
  * @category model
  * @returns {Number} длина самой долгой серии дней подряд
  */
-function findLongestStreak(){
-  let ss = SpreadsheetApp.getActiveSpreadsheet();
-  let workoutHistorySheet = ss.getSheetByName("workout_history");
-
-  let lastRow = workoutHistorySheet.getLastRow();
-
+function findLongestStreak(rawDates){
+  //let workoutHistorySheet = ss.getSheetByName("workout_history");
+  //let lastRow = workoutHistorySheet.getLastRow();
   // Получаем список дат с колонки B
-  let rawDates = workoutHistorySheet.getRange(2, 2, lastRow - 1, 1).getValues();
+  //let rawDates = workoutHistorySheet.getRange(2, 2, lastRow - 1, 1).getValues();
 
   // Пропускаем все пустые строки
   // Записываем в новый список [[]] -> []
@@ -454,7 +454,46 @@ function findLongestStreak(){
   return longestStreak
 }
 
+// Подготовить данные для графика активности за последние пол года
+function calculateWorkoutHalfYear(data){
+  let mainCount = 0
+  let heatmapMonthsNew = []
+  // Создать пустой список для 6 послежних месяцев
+  // const date = new Date(); date.toLocaleString("ru-RU", { month: "short" }); // "сент."
+  const crDate = new Date();
+  for(let i = 0; i < 6; i++){
+    let monthDate = new Date(crDate.getFullYear(), crDate.getMonth() - i, 1);
+    let name = monthDate.toLocaleString("ru-RU", { month: "short" }).replace(".", "")
+    let title = name.charAt(0).toUpperCase() + name.slice(1)
+    let maxDaysInMonth = new Date(crDate.getFullYear(), crDate.getMonth()-i+1, 0).getDate()
+    heatmapMonthsNew.push({
+      label: title,
+      year: monthDate.getFullYear(),
+      month: monthDate.getMonth(),
+      days: maxDaysInMonth,
+      active: []
+    })
+  }
 
+  // Заполянем active
+  for(let i = 0; i < data.length; i++){
+    let crDate = new Date(data[i])
+    if (isNaN(crDate.getTime())) {console.warn("Неверная дата:", data[i]);continue;}
+
+    for(let j = 0; j < heatmapMonthsNew.length; j++){
+      if(crDate.getFullYear() === heatmapMonthsNew[j].year && crDate.getMonth() === heatmapMonthsNew[j].month){
+        if(!heatmapMonthsNew[j].active.includes(crDate.getDate())){
+          heatmapMonthsNew[j].active.push(crDate.getDate())
+          mainCount += 1
+          break;
+        }
+      }
+    }
+  }
+  
+  return {count: mainCount, data: heatmapMonthsNew.reverse()};
+
+}
 
 
 // вместо showModalDialog — точка входа для веб-приложения

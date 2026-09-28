@@ -80,6 +80,7 @@ function onStopClick(){
   session.completedWorkout.calculateTotal();
   session.pageWiew = 'end';
   updateTimerControls()
+  updateStrek();
   render();
 }
 
@@ -201,10 +202,16 @@ let savintStatus = false
 function onSaveWorkoutClick(){
   if (!savintStatus){
     savintStatus=true;
+    // Изменить стиль кнопки сохранить на "в работе"
+    updateSaveBTNinWork()
+
     const payload = JSON.parse(JSON.stringify(session.completedWorkout));
 
     google.script.run
-    .withSuccessHandler(function(response) {})
+    .withSuccessHandler((response) => {
+      // Заблокировать кнопку сохранить, "Сохранено"
+      undateSaveBTNdone()
+    })
     .withFailureHandler(function(err) {console.error('Ошибка: ' + err.message);})
     .seve_data_from_client(payload);
   }

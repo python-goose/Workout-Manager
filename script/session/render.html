@@ -3,6 +3,17 @@
 //  2. УТИЛИТЫ
 // ════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 
+// Для стрика, когда писать, дней, дня день
+function pluralizeDays(n) {
+  const lastTwo = n % 100;
+  const last = n % 10;
+
+  if (lastTwo >= 11 && lastTwo <= 14) return "дней";
+  if (last === 1) return "день";
+  if (last >= 2 && last <= 4) return "дня";
+  return "дней";
+}
+
 /**
  * Рекурсивно строит древовидное HTML-представление произвольного значения
  * (используется для дебаг-панели, чтобы наглядно показать всю структуру session).
@@ -115,11 +126,14 @@ function renderStepperControl(id, sets){
 function renderTree(){
   let tree = buildTree(session, "session");
   let loadStatus = document.getElementById("loadStatus");
-  loadStatus.innerHTML = "";
+  loadStatus.innerHTML = `<h6 class="mb-2"><i class="bi bi-bug"></i> Debug</h6>`;
   loadStatus.appendChild(tree);
 
   let treeTimer = buildTree(timer, "time")
   loadStatus.appendChild(treeTimer);
+
+  let treeInputConfig = buildTree(inputConfig, "inputConfig")
+  loadStatus.appendChild(treeInputConfig);
 }
 
 
@@ -258,14 +272,16 @@ function renderList() {
  * @category render
  */
 function renderHeatmap(){
-  let heatmapMonths = [
+  /*let heatmapMonths = [
     { label: 'Апр', days: 30, active: [2,3,6,9,10,13,17,20,24,27] },
     { label: 'Май', days: 31, active: [1,4,5,8,11,15,18,19,22,25,29] },
     { label: 'Июн', days: 30, active: [2,3,7,10,14,17,21,24,28] },
     { label: 'Июл', days: 31, active: [1,2,5,8,9,12,16,19,23,26,30,31] },
     { label: 'Авг', days: 31, active: [3,4,7,11,14,18,21,25,28] },
     { label: 'Сен', days: 16, active: [1,2,5,8,9,12,15] }
-  ];
+  ];*/
+
+  let heatmapMonths = inputConfig.settings.heatmapMonths.data
 
   let container = document.getElementById("activityHeatmap");
 
@@ -283,7 +299,7 @@ function renderHeatmap(){
   }
 
   container.innerHTML = html;
-  document.getElementById('activityTotalCount').textContent = 155;
+  document.getElementById('activityTotalCount').textContent = inputConfig.settings.heatmapMonths.count;
 }
 
 
