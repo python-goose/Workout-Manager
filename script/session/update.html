@@ -247,9 +247,9 @@ function undateSaveBTNdone(){
 
 // Обновляет максимальный стрик текущий и за все воремя
 function updateStrek(){
-  document.getElementById("currentStreak").innerHTML = `<i class="bi bi-fire text-danger"></i> ${inputConfig.analytics.currentStreak}`;
-  document.getElementById("currentStreakTitle").textContent = `${pluralizeDays(inputConfig.analytics.currentStreak)} подряд`;
-  document.getElementById("maxStreak").textContent = `Рекорд серии: ${inputConfig.analytics.maxStreak} ${pluralizeDays(inputConfig.analytics.maxStreak)}`;
+  document.getElementById("currentStreak").innerHTML = `<i class="bi bi-fire text-danger"></i> ${analytics.currentStreak}`;
+  document.getElementById("currentStreakTitle").textContent = `${pluralizeDays(analytics.currentStreak)} подряд`;
+  document.getElementById("maxStreak").textContent = `Рекорд серии: ${analytics.maxStreak} ${pluralizeDays(analytics.maxStreak)}`;
 }
 
 

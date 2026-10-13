@@ -284,7 +284,7 @@ function renderHeatmap(){
     { label: 'Сен', days: 16, active: [1,2,5,8,9,12,15] }
   ];*/
 
-  let heatmapMonths = inputConfig.analytics.heatmapMonths.data
+  let heatmapMonths = analytics.heatmapMonths.data
 
   let container = document.getElementById("activityHeatmap");
 
@@ -302,7 +302,7 @@ function renderHeatmap(){
   }
 
   container.innerHTML = html;
-  document.getElementById('activityTotalCount').textContent = inputConfig.analytics.heatmapMonths.count;
+  document.getElementById('activityTotalCount').textContent = analytics.heatmapMonths.count;
 }
 
 
