@@ -124,19 +124,25 @@ function renderStepperControl(id, sets){
  * @category render
  */
 function renderTree(){
-  let tree = buildTree(session, "session");
-  let loadStatus = document.getElementById("loadStatus");
-  loadStatus.innerHTML = `<h6 class="mb-2"><i class="bi bi-bug"></i> Debug</h6>`;
-  loadStatus.appendChild(tree);
+  if(setting.developer_DebugPanel){
+    let tree = buildTree(session, "session");
+    let loadStatus = document.getElementById("loadStatus");
+    loadStatus.innerHTML = `<h6 class="mb-2"><i class="bi bi-bug"></i> Debug</h6>`;
+    loadStatus.appendChild(tree);
 
-  let treeTimer = buildTree(timer, "time")
-  loadStatus.appendChild(treeTimer);
+    let treeTimer = buildTree(timer, "time")
+    loadStatus.appendChild(treeTimer);
 
-  let treeInputConfig = buildTree(inputConfig, "inputConfig")
-  loadStatus.appendChild(treeInputConfig);
+    let treeInputConfig = buildTree(inputConfig, "inputConfig")
+    loadStatus.appendChild(treeInputConfig);
 
-  let treeSetting = buildTree(setting, "setting")
-  loadStatus.appendChild(treeSetting);
+    let treeSetting = buildTree(setting, "setting")
+    loadStatus.appendChild(treeSetting);
+  }else{
+    let loadStatus = document.getElementById("loadStatus");
+    if(loadStatus)loadStatus.remove()
+  }
+  
 }
 
 

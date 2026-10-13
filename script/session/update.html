@@ -148,16 +148,24 @@ function updateCompletedCart(){
 
 /**
  * Переключает видимость таблицы/списка/карточки в зависимости от текущего
- * выбранного вида (session.view). Блоки скрываются также, если пользователь
+ * выбранного вида (setting.workoutSession_exerciseViewMode). Блоки скрываются также, если пользователь
  * не на главной странице (session.pageWiew !== 'main').
  *
  * @category update
  */
 function updateViewVisibility(){
+  console.log(`updateViewVisibility: Отобразить упраждения в формате: ${setting.workoutSession_exerciseViewMode}`)
   const isMainPage = session.pageWiew === 'main';
-  document.getElementById("tableView").classList.toggle("d-none", !isMainPage || session.view !== 'table')
-  document.getElementById("listView").classList.toggle("d-none", !isMainPage || session.view !== 'list')
-  document.getElementById("carouselView").classList.toggle("d-none", !isMainPage || session.view !== 'carousel')
+  document.getElementById("tableView").classList.toggle("d-none", !isMainPage || setting.workoutSession_exerciseViewMode !== 'table')
+  document.getElementById("listView").classList.toggle("d-none", !isMainPage || setting.workoutSession_exerciseViewMode !== 'list')
+  document.getElementById("carouselView").classList.toggle("d-none", !isMainPage || setting.workoutSession_exerciseViewMode !== 'card')
+}
+
+// Сделать активную кнопку отображдения
+function updateViewVisibilityBtn(){
+  // Обновить кнопки переключателя
+  let mul = setting.workoutSession_exerciseViewMode
+  document.getElementById(mul === "table" ? "viewTable": mul === "list" ? "viewList" : "viewCarousel").checked = true
 }
 
 
@@ -252,6 +260,10 @@ function updateStrek(){
   document.getElementById("maxStreak").textContent = `Рекорд серии: ${analytics.maxStreak} ${pluralizeDays(analytics.maxStreak)}`;
 }
 
+// Установить тему приложения
+function updateDataBsTheme(){
+  document.documentElement.setAttribute("data-bs-theme", setting.style_theme_color)
+}
 
 </script>
 

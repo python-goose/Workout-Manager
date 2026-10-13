@@ -18,6 +18,7 @@ function on_data_loader(config){
 
   timer = new Timer(setting.workoutSession_prepTimeSec, setting.workoutSession_overtrainingMultiplier);
   timer.onTick = updateTimerCallback;
+  updateDataBsTheme()
   render()
 }
 
@@ -28,11 +29,12 @@ function on_data_error(err){
 function render() {
   // updateBarLine();
   updateSetCount();
+  updateViewVisibilityBtn();
+  updateViewVisibility();
   renderTable();
   renderList();
   updateCard();
   renderWorkoutSwitcher();
-  updateViewVisibility();
   renderTree();
   renderCompletedTable();
   updateCompletedCart();

@@ -223,9 +223,9 @@ function onSaveWorkoutClick(){
 document.getElementById("workoutSwitcher").addEventListener("change", onWorkoutChange)
 
 // Переключение вида отображения: таблица / список / карточка
-document.getElementById("viewTable").addEventListener("change", () => {session.setView("table"); render();})
-document.getElementById("viewList").addEventListener("change", () => {session.setView("list"); render();})
-document.getElementById("viewCarousel").addEventListener("change", () => {session.setView("carousel"); render();})
+document.getElementById("viewTable").addEventListener("change", () => {setting.setView("table"); render();})
+document.getElementById("viewList").addEventListener("change", () => {setting.setView("list"); render();})
+document.getElementById("viewCarousel").addEventListener("change", () => {setting.setView("card"); render();})
 
 // Навигация "Пред."/"След." в карточке упражнения
 document.getElementById("ccPrev").addEventListener("click", () => {session.setPrevIdExercise(); render();})

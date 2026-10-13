@@ -321,7 +321,6 @@ class CompletedWorkout{
  *   каждый элемент превращается в экземпляр Workout
  *
  * @property {Array<Workout>} workouts - список тренировок сессии
- * @property {'table'|'list'|'carousel'} view - текущий вид отображения упражнений
  * @property {Workout} activeWorkout - тренировка, которая сейчас открыта пользователем
  * @property {Number} activeExerciseId - id упражнения, активного сейчас в карточке (для view: carousel)
  * @property {Number} totalSets - суммарное количество выполненных сетов за сессию
@@ -331,8 +330,6 @@ class CompletedWorkout{
 class WorkoutSession {
   constructor(workouts){
     this.workouts = [];
-    // Вынесено в настройки ⚙️
-    this.view = "table"
 
     for(let i = 0; i < workouts.length; i++){
       this.workouts.push(new Workout(workouts[i]))
@@ -364,16 +361,6 @@ class WorkoutSession {
       }
     }
     console.warn(`Тренировка "${id}" не найдена в сессии (id)`);
-  }
-
-  /**
-   * Устанавливает текущий вид отображения упражнений.
-   *
-   * @category model
-   * @param {'table'|'list'|'carousel'} name - название вида
-   */
-  setView(name){
-    this.view = name
   }
 
    /**
@@ -649,12 +636,21 @@ class Setting{
     this.workoutSession_prepTimeSec = data.workoutSession_prepTimeSec;
     this.workoutSession_restTimeSec = data.workoutSession_restTimeSec;
     this.workoutSession_overtrainingMultiplier =  data.workoutSession_overtrainingMultiplier;
-    this.workoutSession_exerciseViewMode = data.workoutSession_exerciseViewMode;
+    this.workoutSession_exerciseViewMode = data.workoutSession_exerciseViewMode || "table";
     this.workoutSession_activeWorkout = data.workoutSession_activeWorkout;
     this.workoutSession_listWorkout = data.workoutSession_listWorkout;
     this.developer_DebugPanel = data.developer_DebugPanel;
     this.style_theme_color = data.style_theme_color;
     this.meta_lastSavedAt = data.meta_lastSavedAt;
+  }
+  /**
+   * Устанавливает текущий вид отображения упражнений.
+   *
+   * @category model
+   * @param {'table'|'list'|'carousel'} name - название вида
+   */
+  setView(name){
+    this.workoutSession_exerciseViewMode = name
   }
 }
 
@@ -666,8 +662,6 @@ class Analytics{
     this.heatmapMonths = data.heatmapMonths;
   }
 }
-
-
 
 
 
