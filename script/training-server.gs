@@ -44,7 +44,8 @@ function get_data_from_server_pro(){
     'Norm': 'dop',
     'tes': 'tes',
     'wr-ls-2': 'wrls2',
-    "pars": "pars"
+    "pars": "pars",
+    'wr-ls-3': 'wrls3',
   }
 
   
@@ -97,10 +98,12 @@ function get_data_from_server_pro(){
   let lastRow = workoutHistorySheet.getLastRow();
   let rawDates = workoutHistorySheet.getRange(2, 2, lastRow - 1, 1).getValues();
 
+  let settest = get_settings_data()
+  console.log(`settest: ${settest}`)
+
   return {
-    settings:{
-      prepSeconds: 10, // Количество секунд, перед тренировкой, этап подготовки
-      overtimeFactor: 0.2, // Мультипликатор для перетренерованности
+    settings:{...settest},
+    analytics:{
       currentStreak: calculateWorkoutStreak(rawDates), // Текущая серия подряд
       maxStreak: findLongestStreak(rawDates), // максимальная серия за все время
       heatmapMonths: calculateWorkoutHalfYear(rawDates), // данные для графика

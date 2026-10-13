@@ -45,7 +45,6 @@ function updateTimerCallback(t){
   }
 }
 
-
 /** ⛔️
  * Позиционирует две разделительные линии на шкале прогресс-бара — они
  * отмечают границы между фазами "подготовка/тренировка" и
@@ -248,9 +247,9 @@ function undateSaveBTNdone(){
 
 // Обновляет максимальный стрик текущий и за все воремя
 function updateStrek(){
-  document.getElementById("currentStreak").innerHTML = `<i class="bi bi-fire text-danger"></i> ${inputConfig.settings.currentStreak}`;
-  document.getElementById("currentStreakTitle").textContent = `${pluralizeDays(inputConfig.settings.currentStreak)} подряд`;
-  document.getElementById("maxStreak").textContent = `Рекорд серии: ${inputConfig.settings.maxStreak} ${pluralizeDays(inputConfig.settings.maxStreak)}`;
+  document.getElementById("currentStreak").innerHTML = `<i class="bi bi-fire text-danger"></i> ${inputConfig.analytics.currentStreak}`;
+  document.getElementById("currentStreakTitle").textContent = `${pluralizeDays(inputConfig.analytics.currentStreak)} подряд`;
+  document.getElementById("maxStreak").textContent = `Рекорд серии: ${inputConfig.analytics.maxStreak} ${pluralizeDays(inputConfig.analytics.maxStreak)}`;
 }
 
 

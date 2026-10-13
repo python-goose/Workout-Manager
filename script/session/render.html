@@ -134,6 +134,9 @@ function renderTree(){
 
   let treeInputConfig = buildTree(inputConfig, "inputConfig")
   loadStatus.appendChild(treeInputConfig);
+
+  let treeSetting = buildTree(setting, "setting")
+  loadStatus.appendChild(treeSetting);
 }
 
 
@@ -281,7 +284,7 @@ function renderHeatmap(){
     { label: 'Сен', days: 16, active: [1,2,5,8,9,12,15] }
   ];*/
 
-  let heatmapMonths = inputConfig.settings.heatmapMonths.data
+  let heatmapMonths = inputConfig.analytics.heatmapMonths.data
 
   let container = document.getElementById("activityHeatmap");
 
@@ -299,7 +302,7 @@ function renderHeatmap(){
   }
 
   container.innerHTML = html;
-  document.getElementById('activityTotalCount').textContent = inputConfig.settings.heatmapMonths.count;
+  document.getElementById('activityTotalCount').textContent = inputConfig.analytics.heatmapMonths.count;
 }
 
 

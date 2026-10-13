@@ -331,13 +331,16 @@ class CompletedWorkout{
 class WorkoutSession {
   constructor(workouts){
     this.workouts = [];
+    // Вынесено в настройки ⚙️
     this.view = "table"
 
     for(let i = 0; i < workouts.length; i++){
       this.workouts.push(new Workout(workouts[i]))
     }
 
+    // Если в настройках указана тренировка нужно ее сделать по умолчанию
     this.activeWorkout = this.workouts[0]
+    //this.activeWorkout = this.setActiveWorkoutByid(setting.workoutSession_activeWorkout)
     this.activeExerciseId = this.activeWorkout.exercises[0].id
     this.totalSets = 0
     this.completedWorkout = new CompletedWorkout();
@@ -635,6 +638,47 @@ class Timer{
     return `${h}:${m}:${s}`; 
   }
 }
+
+/*⛔️ класс с настройками приложения */
+class Setting{
+  constructor(data){
+    this.profile_height = data.profile_height;
+    this.profile_weight =  data.profile_weight;
+    this.profile_age = data.profile_age;
+    this.profile_gender = data.profile_gender;
+    this.workoutSession_prepTimeSec = data.workoutSession_prepTimeSec;
+    this.workoutSession_restTimeSec = data.workoutSession_restTimeSec;
+    this.workoutSession_overtrainingMultiplier =  data.workoutSession_overtrainingMultiplier;
+    this.workoutSession_exerciseViewMode = data.workoutSession_exerciseViewMode;
+    this.workoutSession_activeWorkout = data.workoutSession_activeWorkout;
+    this.workoutSession_listWorkout = data.workoutSession_listWorkout;
+    this.developer_DebugPanel = data.developer_DebugPanel;
+    this.style_theme_color = data.style_theme_color;
+    this.meta_lastSavedAt = data.meta_lastSavedAt;
+  }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
