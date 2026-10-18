@@ -1,0 +1,13 @@
+# clasp
+.clasprc.json
+**/.clasprc.json
+creds.json
+client_secret*.json
+
+# Node
+node_modules/
+npm-debug.log*
+
+# Мусор системы
+.DS_Store
+Thumbs.db

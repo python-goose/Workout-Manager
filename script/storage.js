@@ -1,3 +1,4 @@
+// база данных
 class Storage{
   constructor(key){
     this.key = key
