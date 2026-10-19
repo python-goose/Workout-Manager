@@ -12,3 +12,9 @@ clasp show-file-status # что уйдёт при push
 ```bash
 git commit -m "Описание изменений, closes #12"  # закроет issue №12 после попадания в main
 ```
+
+# test
+
+```bash
+npm test # Запуск тестов
+```

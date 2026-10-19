@@ -1,0 +1,26 @@
+{
+  "name": "12_sport_gs",
+  "version": "1.0.0",
+  "description": "```bash cd script              # папка проекта clasp pull             # забрать с сервера clasp push             # отправить на сервер clasp show-file-status # что уйдёт при push ```",
+  "main": "index.js",
+  "directories": {
+    "doc": "docs"
+  },
+  "scripts": {
+    "test": "jest"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/python-goose/Workout-Manager.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/python-goose/Workout-Manager/issues"
+  },
+  "homepage": "https://github.com/python-goose/Workout-Manager#readme",
+  "devDependencies": {
+    "jest": "^30.5.2"
+  }
+}

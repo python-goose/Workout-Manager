@@ -8,6 +8,7 @@ client_secret*.json
 node_modules/
 npm-debug.log*
 
+.vscode/
 # Мусор системы
 .DS_Store
 Thumbs.db
