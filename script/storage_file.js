@@ -2,8 +2,7 @@ const StorageFileConfig = {
   exercises: {
     name: "_storage/exercises",
     varname: "EXERCISES",
-    data: EXERCISES,
-    key: ["id", "name", "time", "url_photo"]
+    data: EXERCISES
   }
 };
 
@@ -108,7 +107,8 @@ class ModelFile {
   }
 }
 
-function testsss() {
+
+function testsss345645646() {
   const fileStor = new StorageFiles(); // скачать проект
   const ex = new ModelFile(StorageFileConfig.exercises); // пределить какой файл редактировать
   fileStor.register(ex); // регистрации что бы авто сохранения было

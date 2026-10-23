@@ -1,5 +1,52 @@
+function get_data_from_server_pro() {
+  const trainings = JSON.parse(JSON.stringify(TRAININGS));
+  const exercises = JSON.parse(JSON.stringify(EXERCISES));
 
-function get_data_from_server_pro(){
+  // Пройтись по тренировкам и добавить к упражнениям, название и фото
+  for (let i = 0; i < trainings.length; i++) {
+    for (let j = 0; j < trainings[i].exercises.length; j++) {
+      let needFind = trainings[i].exercises[j].id;
+      let exercise = exercises.find(e => e.id === needFind);
+      if (!exercise) throw new Error(`id: ${needFind} in EXERCISES not found`);
+      trainings[i].exercises[j].name = exercise.name;
+      trainings[i].exercises[j].photo_small = exercise.url_photo;
+      trainings[i].exercises[j].photo_large = exercise.url_photo;
+    }
+  }
+
+  // Взять все упржнения и сделать с них тренировку "Все упражнения"
+  trainings.push({id: "all", name: "all", archived: false, time: 2000,  exercises: []})
+  for (let i = 0; i < exercises.length; i++) {
+    trainings[trainings.length - 1].exercises.push({
+      id: exercises[i].id,
+      name: exercises[i].name, 
+      reps: 1,  
+      weight: 0,  
+      time: 10,
+      photo_small: exercises[i].url_photo,
+      photo_large: exercises[i].url_photo
+    })
+  }
+
+
+  let ss = SpreadsheetApp.getActiveSpreadsheet();
+  let workoutHistorySheet = ss.getSheetByName("workout_history");
+  let lastRow = workoutHistorySheet.getLastRow();
+  let rawDates = workoutHistorySheet.getRange(2, 2, lastRow - 1, 1).getValues();
+
+  return {
+    settings: get_settings_data(),
+    analytics:{
+      currentStreak: calculateWorkoutStreak(rawDates),
+      maxStreak: findLongestStreak(rawDates),
+      heatmapMonths: calculateWorkoutHalfYear(rawDates),
+    },
+    workouts: trainings
+  }
+}
+
+
+function get_data_from_server_pro_old(){
   let ss = SpreadsheetApp.getActiveSpreadsheet();
   let training_sheet = ss.getSheetByName('training')
   let exercises_sheet = ss.getSheetByName('exercises')
