@@ -22,6 +22,8 @@
  *   используется заглушка https://placehold.co/485x365
  */
 class Exercise {
+  // один объект с деструктуризацией
+  // порядок не важен, потому что поля берутся по имени
   constructor({id, name, reps, weight, time, photo_small, photo_large}){
     this.id = id
     this.name = name || "Название не указано";
@@ -77,7 +79,7 @@ class Workout{
     for(let i = 0; i < this.exercises.length; i++){
       if(this.exercises[i].id === id) return this.exercises[i]
     }
-  }
+  }      
 
   /**
    * Находит порядковый номер упражнения в списке по его id.
@@ -174,8 +176,8 @@ class CompletedWorkout{
     this.countUniqueExercises = 0;
     this.totalWeightLifted = 0;
     this.exercise = [];
-     this.complexityAssessment = 20;
-    this.comment;
+    this.complexityAssessment = 20;
+    this.comment = '';
   }
 
   /**
@@ -240,6 +242,8 @@ class CompletedWorkout{
    * @category model
    */
   calculateTotalWeightLifted(){
+    // Обнуление, что бы при повторном запуске на удвоить
+    this.totalWeightLifted = 0;
     for(let i = 0; i < this.exercise.length; i++){
       this.totalWeightLifted += this.exercise[i].reps * this.exercise[i].weight
     }

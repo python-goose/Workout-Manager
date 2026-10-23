@@ -1,5 +1,5 @@
 // база данных
-class Storage{
+class StorageProperties{
   constructor(key){
     this.key = key
     this.properties = PropertiesService.getDocumentProperties();
@@ -36,7 +36,7 @@ class Storage{
 
 
 function testStop(){
-  let storage = new Storage("settings1")
+  let storage = new StorageProperties("settings1")
   console.log(storage.data)
   storage.clean()
   console.log(storage.data)

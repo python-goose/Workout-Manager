@@ -20,7 +20,7 @@ const DEFAULT_SETTINGS = {
 
 class Settings{
   constructor(){
-    this.db = new Storage("settings");
+    this.db = new StorageProperties("settings");
     // Локальное гранилище
     this.data = null;
     this._init()
