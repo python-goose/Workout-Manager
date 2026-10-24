@@ -24,6 +24,7 @@ class AppScriptFiles {
   }
 
   static _fetch(){
+    AppScriptFiles._backup();
     const response = UrlFetchApp.fetch(AppScriptFiles._url, {
       headers: AppScriptFiles._headers,
       muteHttpExceptions: true
@@ -36,7 +37,6 @@ class AppScriptFiles {
   }
 
   _write(){
-    AppScriptFiles._backup();
     const response = UrlFetchApp.fetch(AppScriptFiles._url, {
       method: 'put',
       contentType: 'application/json',

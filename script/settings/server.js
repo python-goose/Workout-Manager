@@ -1,22 +1,24 @@
-const DEFAULT_SETTINGS = {
-  profile_height: 178,             // Рост в сантиметрах (например, 178)
-  profile_weight: 75.5,            // Вес в килограммах (например, 75.5)
-  profile_age: 28,                 // Возраст в годах
-  profile_gender: "male",           // Пол: "male", "female"
+function getDefaultSettings() {
+  return {
+    profile_height: 178,             // Рост в сантиметрах (например, 178)
+    profile_weight: 75.5,            // Вес в килограммах (например, 75.5)
+    profile_age: 28,                 // Возраст в годах
+    profile_gender: "male",           // Пол: "male", "female"
 
-  workoutSession_prepTimeSec: 10,              // Время подготовки перед стартом тренировки (в секундах)
-  workoutSession_restTimeSec: 20,              // Время отдыха между подходами / сетами (в секундах)
-  workoutSession_overtrainingMultiplier: 0.2,  // Мультипликатор перетренированности (0.2 = запас 20% к итоговому времени)
-  workoutSession_exerciseViewMode: "table",    // Вид отображения списка упражнений: "table" | "list" | "card"
-  workoutSession_activeWorkout: "",
-  workoutSession_listWorkout: ["", "workout_1", "workout_2", "workout_3", "workout_4"], // Пустая строка всегда должна быть, это "не выбрано"
+    workoutSession_prepTimeSec: 10,              // Время подготовки перед стартом тренировки (в секундах)
+    workoutSession_restTimeSec: 20,              // Время отдыха между подходами / сетами (в секундах)
+    workoutSession_overtrainingMultiplier: 0.2,  // Мультипликатор перетренированности (0.2 = запас 20% к итоговому времени)
+    workoutSession_exerciseViewMode: "table",    // Вид отображения списка упражнений: "table" | "list" | "card"
+    workoutSession_activeWorkout: "",
+    workoutSession_listWorkout: ["", ...TRAININGS.map(t => t.name)], // Пустая строка всегда должна быть, это "не выбрано"
 
-  developer_DebugPanel: false,
+    developer_DebugPanel: false,
 
-  style_theme_color: "light",                  // Стиль темы будстрап "light" | "dark"
+    style_theme_color: "light",                  // Стиль темы будстрап "light" | "dark"
 
-  meta_lastSavedAt: "",                         // Метка времени последнего сохранения настроек
-};
+    meta_lastSavedAt: "",                         // Метка времени последнего сохранения настроек
+  };
+}
 
 class Settings{
   constructor(){
@@ -33,7 +35,7 @@ class Settings{
     // Если база пустая, ее нужно заполнить дефолтными данными
     if(this.db.isEmpty()){
       // Локальное хранилище заполняеться дефолтными данными
-      this.data = {...DEFAULT_SETTINGS}
+      this.data = {...getDefaultSettings()}
       // Локальное хранилище передаеться в базу
       this.db.data =  this.data
       // База делает запись и сохраняет данные в памяти
@@ -41,7 +43,8 @@ class Settings{
     }else{
       // Если данные есть, то в локальное хранилиже сохраняем данные с базы и дополняем
       // Новыми полямы которые есть в конфиге но нету в гранилище
-      this.data = {...DEFAULT_SETTINGS, ...this.db.data}
+      this.data = {...getDefaultSettings(), ...this.db.data}
+      this.data.workoutSession_listWorkout = ["", ...TRAININGS.map(t => t.name)]
     }
   }
 
@@ -60,7 +63,7 @@ class Settings{
 
   // Когда нужно сбросить все данные с хранилища
   reset(){
-    return this.save(DEFAULT_SETTINGS)
+    return this.save(getDefaultSettings())
   }
 
   _formatDate(date) {

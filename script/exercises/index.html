@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="ru" data-bs-theme="light">
+  <head>
+    <meta charset="UTF-8">
+    <base target="_top">
+    <!-- Подключаем Bootstrap 5 CSS через CDN -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Подключаем иконки Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <style>
+      html, body {height: 100%;margin: 0;overflow: hidden; }
+      body {background-color: var(--bs-body-bg);padding: 5px;user-select: none;}
+      .no-scrollbar {overflow-y: auto;scrollbar-width: none; -ms-overflow-style: none; }
+      .no-scrollbar::-webkit-scrollbar {display: none;}
+      /* Миниатюра упражнения в таблице (45×45px) */
+      .thumb { width: 45px; height: 45px; object-fit: cover; border-radius: 4px; border: 1px solid #dee2e6; }
+      /* Крупное фото на странице редактирования */
+      .edit-photo { width:100%; max-height: 320px; aspect-ratio: 1 / 1; object-fit:cover; }
+      /* Стиль заголовка таблицы упражнений */
+      #tableView .table thead th {font-weight:600;font-size:.9rem;color:var(--bs-secondary-color);border-bottom-width:1px;background-color: var(--bs-body-bg);}
+    </style>
+  </head>
+  <body>
+    <div class="d-flex flex-column p-0" style="height:100vh; max-width:1200px; margin:0 auto;">
+ 
+      <!-- ============================================================ -->
+      <!-- ============ СТРАНИЦА 1: СПИСОК УПРАЖНЕНИЙ ================= -->
+      <!-- ============================================================ -->
+      <div id="pageList" class="d-flex flex-column flex-grow-1" style="min-height:0;">
+ 
+        <!-- ===== ЗАФИКСИРОВАННАЯ ШАПКА ===== -->
+        <div class="flex-shrink-0 px-3 pt-3">
+ 
+          <!-- Заголовок + кнопка добавления (пока открывает редактирование первого упражнения) -->
+          <div class="card shadow-sm mb-2">
+            <div class="card-body d-flex align-items-center justify-content-between flex-wrap gap-2 py-3">
+              <div>
+                <h5 class="card-title mb-0"><i class="bi bi-database"></i> База упражнений</h5>
+                <div class="small text-secondary">Всего упражнений: <b id="totalExercises">20</b></div>
+              </div>
+              <button class="btn btn-success" data-page="edit"><i class="bi bi-plus-lg"></i> Добавить</button>
+            </div>
+          </div>
+ 
+          <!-- Поиск -->
+          <div class="d-flex justify-content-between align-items-center mb-2 flex-wrap gap-2">
+            <div class="input-group input-group-sm" style="max-width: 320px;">
+              <span class="input-group-text"><i class="bi bi-search"></i></span>
+              <input type="search" class="form-control" id="searchInput" placeholder="Поиск по названию...">
+            </div>
+            <span class="text-secondary small">Показано: <b>20</b></span>
+          </div>
+        </div>
+ 
+        <!-- ===== СКРОЛЛИРУЕМАЯ ОБЛАСТЬ ===== -->
+        <div class="flex-grow-1 no-scrollbar px-3 pb-3">
+ 
+          <div id="tableView" class="card shadow-sm" style="min-height:100px;">
+            <div class="table-responsive">
+              <table class="table table-hover align-middle mb-0">
+                <thead>
+                  <tr>
+                    <th style="width:60px;">ID</th>
+                    <th style="width:64px;">Фото</th>
+                    <th>Упражнение</th>
+                    <th style="width:120px;">Сек / подход</th>
+                    <th style="width:60px;"></th>
+                  </tr>
+                </thead>
+                <tbody id="tableBody">
+                  <tr>
+                    <td class="text-secondary">1</td>
+                    <td><img src="https://lh3.googleusercontent.com/d/1YWCfMysuzW-tcBOv5v1NzplKy3fNMqyN" class="thumb rounded" alt="Жым гантелей сидя"></td>
+                    <td class="fw-semibold">Жым гантелей сидя</td>
+                    <td><span class="badge text-bg-secondary">2 сек</span></td>
+                    <td class="text-end"><button class="btn btn-link text-secondary btn-sm" data-page="edit" title="Редактировать"><i class="bi bi-pencil"></i></button></td>
+                  </tr>
+                  <tr>
+                    <td class="text-secondary">2</td>
+                    <td><img src="https://lh3.googleusercontent.com/d/1zmUMEL4jBrMdC4EwDcGSncCaEh1oYHAo" class="thumb rounded" alt="Жим фитнес резинки стоя"></td>
+                    <td class="fw-semibold">Жим фитнес резинки стоя</td>
+                    <td><span class="badge text-bg-secondary">2 сек</span></td>
+                    <td class="text-end"><button class="btn btn-link text-secondary btn-sm" data-page="edit" title="Редактировать"><i class="bi bi-pencil"></i></button></td>
+                  </tr>
+                  <tr>
+                    <td class="text-secondary">3</td>
+                    <td><img src="https://lh3.googleusercontent.com/d/1TskmhUr77doQ1lHz8u5iZEsXZDFJ5q1Z" class="thumb rounded" alt="Отжимания на брусьях"></td>
+                    <td class="fw-semibold">Отжимания на брусьях с наклоном корпуса вперед</td>
+                    <td><span class="badge text-bg-secondary">2 сек</span></td>
+                    <td class="text-end"><button class="btn btn-link text-secondary btn-sm" data-page="edit" title="Редактировать"><i class="bi bi-pencil"></i></button></td>
+                  </tr>
+                  <tr>
+                    <td class="text-secondary">4</td>
+                    <td><img src="https://lh3.googleusercontent.com/d/11rcMMWsG6lgDtke3MyH3D1e4UO_twurf" class="thumb rounded" alt="Стойка на руках у стены"></td>
+                    <td class="fw-semibold">Стойка на руках у стены</td>
+                    <td><span class="badge text-bg-secondary">30 сек</span></td>
+                    <td class="text-end"><button class="btn btn-link text-secondary btn-sm" data-page="edit" title="Редактировать"><i class="bi bi-pencil"></i></button></td>
+                  </tr>
+                  <tr>
+                    <td class="text-secondary">5</td>
+                    <td><img src="https://lh3.googleusercontent.com/d/11rcMMWsG6lgDtke3MyH3D1e4UO_twurf" class="thumb rounded" alt="Стойка на руках без опоры"></td>
+                    <td class="fw-semibold">Стойка на руках без опоры</td>
+                    <td><span class="badge text-bg-secondary">30 сек</span></td>
+                    <td class="text-end"><button class="btn btn-link text-secondary btn-sm" data-page="edit" title="Редактировать"><i class="bi bi-pencil"></i></button></td>
+                  </tr>
+                  <tr>
+                    <td class="text-secondary">6</td>
+                    <td><img src="https://lh3.googleusercontent.com/d/1YraXc4W1o_CcSvLyDO5MBIKOsUyrII3H" class="thumb rounded" alt="Французский жим стоя с резинкой"></td>
+                    <td class="fw-semibold">Французский жим стоя с резинкой</td>
+                    <td><span class="badge text-bg-secondary">2 сек</span></td>
+                    <td class="text-end"><button class="btn btn-link text-secondary btn-sm" data-page="edit" title="Редактировать"><i class="bi bi-pencil"></i></button></td>
+                  </tr>
+                  <tr>
+                    <td class="text-secondary">7</td>
+                    <td><img src="https://builderbody.ru/wp-content/uploads/2011/01/6-48.jpg" class="thumb rounded" alt="Французский жим с гантелей"></td>
+                    <td class="fw-semibold">Французский жим с гантелей</td>
+                    <td><span class="badge text-bg-secondary">3 сек</span></td>
+                    <td class="text-end"><button class="btn btn-link text-secondary btn-sm" data-page="edit" title="Редактировать"><i class="bi bi-pencil"></i></button></td>
+                  </tr>
+                  <tr>
+                    <td class="text-secondary">8</td>
+                    <td><img src="https://lh3.googleusercontent.com/d/1PWObpVinOwp25bms46wK5UHIisIm4ASa" class="thumb rounded" alt="Трапеция с гантелями"></td>
+                    <td class="fw-semibold">Трапеция с гантелями (Шраги)</td>
+                    <td><span class="badge text-bg-secondary">2 сек</span></td>
+                    <td class="text-end"><button class="btn btn-link text-secondary btn-sm" data-page="edit" title="Редактировать"><i class="bi bi-pencil"></i></button></td>
+                  </tr>
+                  <tr>
+                    <td class="text-secondary">9</td>
+                    <td><img src="https://lh3.googleusercontent.com/d/1iil3mrYeszKkjckLTJUOECaGbBl2gaUT" class="thumb rounded" alt="Pike Push-ups Уголок"></td>
+                    <td class="fw-semibold">Pike Push-ups Уголок</td>
+                    <td><span class="badge text-bg-secondary">3 сек</span></td>
+                    <td class="text-end"><button class="btn btn-link text-secondary btn-sm" data-page="edit" title="Редактировать"><i class="bi bi-pencil"></i></button></td>
+                  </tr>
+                  <tr>
+                    <td class="text-secondary">10</td>
+                    <td><img src="https://lh3.googleusercontent.com/d/147BSZCxnALvqKjEV3RnnXsrYbD8oED-W" class="thumb rounded" alt="Французский жим лежа с гантелями"></td>
+                    <td class="fw-semibold">Французский жим лежа с гантелями</td>
+                    <td><span class="badge text-bg-secondary">3 сек</span></td>
+                    <td class="text-end"><button class="btn btn-link text-secondary btn-sm" data-page="edit" title="Редактировать"><i class="bi bi-pencil"></i></button></td>
+                  </tr>
+                  <tr>
+                    <td class="text-secondary">12</td>
+                    <td><img src="https://lh3.googleusercontent.com/d/1Dp2CSTM_cT1NwqJMmHrtBjFCGKdPRDp4" class="thumb rounded" alt="Школьная разминка всего тела"></td>
+                    <td class="fw-semibold">Школьная разминка всего тела</td>
+                    <td><span class="badge text-bg-secondary">180 сек</span></td>
+                    <td class="text-end"><button class="btn btn-link text-secondary btn-sm" data-page="edit" title="Редактировать"><i class="bi bi-pencil"></i></button></td>
+                  </tr>
+                  <tr>
+                    <td class="text-secondary">20</td>
+                    <td><img src="https://lh3.googleusercontent.com/d/1Jk_kdVIFbwZGn6H6IlKJ5Wf3LyleOtuy" class="thumb rounded" alt="Произвольная растяжка"></td>
+                    <td class="fw-semibold">Произвольная растяжка</td>
+                    <td><span class="badge text-bg-secondary">1000 сек</span></td>
+                    <td class="text-end"><button class="btn btn-link text-secondary btn-sm" data-page="edit" title="Редактировать"><i class="bi bi-pencil"></i></button></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+ 
+        </div> <!-- Конец скроллируемой области -->
+      </div> <!-- Конец страницы 1 -->
+ 
+ 
+      <!-- ============================================================ -->
+      <!-- ========= СТРАНИЦА 2: РЕДАКТИРОВАНИЕ УПРАЖНЕНИЯ ============ -->
+      <!-- ============================================================ -->
+      <div id="pageEdit" class="d-none flex-column flex-grow-1" style="min-height:0;">
+ 
+        <!-- ===== ЗАФИКСИРОВАННАЯ ШАПКА ===== -->
+        <div class="flex-shrink-0 px-3 pt-3">
+          <div class="card shadow-sm mb-2">
+            <div class="card-body d-flex align-items-center justify-content-between flex-wrap gap-2 py-3">
+              <div class="d-flex align-items-center gap-2">
+                <button class="btn btn-link text-secondary btn-sm px-1" data-page="list" title="Назад к списку"><i class="bi bi-arrow-left"></i></button>
+                <h5 class="card-title mb-0"><i class="bi bi-pencil-square"></i> Редактирование упражнения</h5>
+              </div>
+              <span class="badge text-bg-secondary">ID: 1</span>
+            </div>
+          </div>
+        </div>
+ 
+        <!-- ===== СКРОЛЛИРУЕМАЯ ОБЛАСТЬ ===== -->
+        <div class="flex-grow-1 no-scrollbar px-3 pb-3">
+ 
+          <div class="card shadow-sm mb-2">
+            <div class="row g-0">
+ 
+              <!-- Фото -->
+              <div class="col-12 col-md-5">
+                <img id="editPhoto" src="https://lh3.googleusercontent.com/d/1YWCfMysuzW-tcBOv5v1NzplKy3fNMqyN" alt="Фото упражнения" class="edit-photo rounded-start">
+              </div>
+ 
+              <!-- Поля формы -->
+              <div class="col-12 col-md-7">
+                <div class="card-body">
+ 
+                  <div class="mb-3">
+                    <label class="form-label small fw-semibold mb-1" for="editName">Название</label>
+                    <input type="text" class="form-control form-control-sm" id="editName" value="Жым гантелей сидя" placeholder="Например: Приседания">
+                  </div>
+ 
+                  <div class="mb-3">
+                    <label class="form-label small fw-semibold mb-1" for="editTime">Время на подход</label>
+                    <div class="input-group input-group-sm" style="max-width:180px;">
+                      <input type="number" min="0" class="form-control" id="editTime" value="2">
+                      <span class="input-group-text">сек</span>
+                    </div>
+                    <div class="form-text">Сколько секунд занимает один подход</div>
+                  </div>
+ 
+                  <div class="mb-0">
+                    <label class="form-label small fw-semibold mb-1" for="editPhotoUrl">Ссылка на фото</label>
+                    <div class="input-group input-group-sm">
+                      <span class="input-group-text"><i class="bi bi-image"></i></span>
+                      <input type="url" class="form-control" id="editPhotoUrl" value="https://lh3.googleusercontent.com/d/1YWCfMysuzW-tcBOv5v1NzplKy3fNMqyN" placeholder="https://...">
+                    </div>
+                  </div>
+ 
+                </div>
+              </div>
+            </div>
+          </div>
+ 
+          <!-- Кнопки -->
+          <div class="d-flex justify-content-between gap-2 mb-2">
+            <button class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#deleteModal"><i class="bi bi-trash"></i> Удалить</button>
+            <div class="d-flex gap-2">
+              <button class="btn btn-outline-secondary" data-page="list">Отмена</button>
+              <button class="btn btn-primary" data-page="list"><i class="bi bi-check-lg"></i> Сохранить</button>
+            </div>
+          </div>
+ 
+        </div> <!-- Конец скроллируемой области -->
+      </div> <!-- Конец страницы 2 -->
+ 
+    </div> <!-- Конец контейнера -->
+ 
+    <!-- ================= МОДАЛКА ПОДТВЕРЖДЕНИЯ УДАЛЕНИЯ ================= -->
+    <div class="modal fade" id="deleteModal" tabindex="-1" aria-hidden="true">
+      <div class="modal-dialog modal-dialog-centered modal-sm">
+        <div class="modal-content">
+          <div class="modal-body text-center">
+            <i class="bi bi-exclamation-triangle text-danger display-6"></i>
+            <h6 class="mt-2 mb-1">Удалить упражнение?</h6>
+            <div class="small text-secondary">«Жым гантелей сидя» будет удалено без возможности восстановления.</div>
+          </div>
+          <div class="modal-footer justify-content-center border-0 pt-0">
+            <button class="btn btn-outline-secondary btn-sm" data-bs-dismiss="modal">Отмена</button>
+            <button class="btn btn-danger btn-sm" data-bs-dismiss="modal" data-page="list"><i class="bi bi-trash"></i> Удалить</button>
+          </div>
+        </div>
+      </div>
+    </div>
+ 
+  </body>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+    // Только переключение страниц (список <-> редактирование).
+    // Любая кнопка с data-page="list" | "edit" открывает нужную страницу.
+    document.addEventListener('click', function(e){
+      let btn = e.target.closest('[data-page]');
+      if(!btn) return;
+      let page = btn.dataset.page;
+      document.getElementById('pageList').classList.toggle('d-none', page !== 'list');
+      document.getElementById('pageList').classList.toggle('d-flex', page === 'list');
+      document.getElementById('pageEdit').classList.toggle('d-none', page !== 'edit');
+      document.getElementById('pageEdit').classList.toggle('d-flex', page === 'edit');
+    });
+  </script>
+</html>

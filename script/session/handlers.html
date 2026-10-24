@@ -154,7 +154,7 @@ function onCommentInput(event){
   timeoutId = setTimeout(() => {
     let commentText = event.target.value;
     session.completedWorkout.setComment(commentText);
-  }, 1000);
+  }, 500);
 }
 
 
@@ -212,7 +212,7 @@ function onSaveWorkoutClick(){
       // Заблокировать кнопку сохранить, "Сохранено"
       undateSaveBTNdone()
     })
-    .withFailureHandler(function(err) {console.error('Ошибка: ' + err.message);})
+    .withFailureHandler(function(err) {console.error('Ошибка: ' + err.message); updateSaveBTNNormal()})
     .seve_data_from_client(payload);
   }
   render();

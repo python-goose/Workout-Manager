@@ -239,6 +239,13 @@ function updateComplexityBadge(){
   
 }
 
+// Кнопку сохранить тренировку вернуть в стандартное состояние
+function updateSaveBTNNormal(){
+  let btn = document.getElementById("saveWorkoutBtn")
+  btn.innerHTML = ` <<i class="bi bi-check-lg"></i> Сохранить`
+  btn.disabled = false
+}
+
 // Кнопку сохранить тренировку переводит в режым в работе
 function updateSaveBTNinWork(){
   document.getElementById("saveWorkoutBtn").innerHTML = ` <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>  Сохранение...`

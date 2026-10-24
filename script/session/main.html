@@ -12,8 +12,8 @@ window.onload = function(){
 
 function on_data_loader(config){
   inputConfig = config
-  session = new WorkoutSession(config.workouts);
   setting = new Setting(config.settings);
+  session = new WorkoutSession(config.workouts);
   analytics = new Analytics(config.analytics);
 
   timer = new Timer(setting.workoutSession_prepTimeSec, setting.workoutSession_overtrainingMultiplier);

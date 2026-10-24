@@ -24,8 +24,9 @@
 class Exercise {
   // один объект с деструктуризацией
   // порядок не важен, потому что поля берутся по имени
-  constructor({id, name, reps, weight, time, photo_small, photo_large}){
-    this.id = id
+  constructor({id, id_e, name, reps, weight, time, photo_small, photo_large}){
+    this.id = id // Порядковый номер упражнения
+    this.idE = id_e // Айдишник упражнения
     this.name = name || "Название не указано";
     this.reps = Number(reps) || 0;
     this.weight = Number(weight) || 0;
@@ -228,8 +229,8 @@ class CompletedWorkout{
   calculateCountUniqueExercises(){
     let uniq = []
     for(let i = 0; i < this.exercise.length; i++){
-      if(!uniq.includes(this.exercise[i].id)){
-        uniq.push(this.exercise[i].id)
+      if(!uniq.includes(this.exercise[i].idE)){
+        uniq.push(this.exercise[i].idE)
       }
     }
     this.countUniqueExercises = uniq.length;
@@ -341,7 +342,7 @@ class WorkoutSession {
 
     // Если в настройках указана тренировка нужно ее сделать по умолчанию
     this.activeWorkout = this.workouts[0]
-    //this.activeWorkout = this.setActiveWorkoutByid(setting.workoutSession_activeWorkout)
+    this.setActiveWorkoutByid(setting.workoutSession_activeWorkout)
     this.activeExerciseId = this.activeWorkout.exercises[0].id
     this.totalSets = 0
     this.completedWorkout = new CompletedWorkout();

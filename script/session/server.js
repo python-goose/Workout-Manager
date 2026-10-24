@@ -5,7 +5,7 @@ function get_data_from_server_pro() {
   // Пройтись по тренировкам и добавить к упражнениям, название и фото
   for (let i = 0; i < trainings.length; i++) {
     for (let j = 0; j < trainings[i].exercises.length; j++) {
-      let needFind = trainings[i].exercises[j].id;
+      let needFind = trainings[i].exercises[j].id_e;
       let exercise = exercises.find(e => e.id === needFind);
       if (!exercise) throw new Error(`id: ${needFind} in EXERCISES not found`);
       trainings[i].exercises[j].name = exercise.name;
@@ -18,7 +18,8 @@ function get_data_from_server_pro() {
   trainings.push({id: "all", name: "all", archived: false, time: 2000,  exercises: []})
   for (let i = 0; i < exercises.length; i++) {
     trainings[trainings.length - 1].exercises.push({
-      id: exercises[i].id,
+      id: i+1,
+      id_e: exercises[i].id,
       name: exercises[i].name, 
       reps: 1,  
       weight: 0,  
@@ -31,8 +32,9 @@ function get_data_from_server_pro() {
 
   let ss = SpreadsheetApp.getActiveSpreadsheet();
   let workoutHistorySheet = ss.getSheetByName("workout_history");
+  if(!workoutHistorySheet) throw new Error('Лист "workout_history" не найден в таблице.')
   let lastRow = workoutHistorySheet.getLastRow();
-  let rawDates = workoutHistorySheet.getRange(2, 2, lastRow - 1, 1).getValues();
+  let rawDates = lastRow > 1 ? workoutHistorySheet.getRange(2, 2, lastRow - 1, 1).getValues() : [];
 
   return {
     settings: get_settings_data(),
@@ -42,241 +44,6 @@ function get_data_from_server_pro() {
       heatmapMonths: calculateWorkoutHalfYear(rawDates),
     },
     workouts: trainings
-  }
-}
-
-
-function get_data_from_server_pro_old(){
-  let ss = SpreadsheetApp.getActiveSpreadsheet();
-  let training_sheet = ss.getSheetByName('training')
-  let exercises_sheet = ss.getSheetByName('exercises')
-  let training_last_row = training_sheet.getLastRow();
-  let training_last_col = training_sheet.getLastColumn();
-
-  let time_cong = {
-    'wr-ls': 'main',
-    'Norm': 'dop',
-    'tes': 'tes',
-    'wr-ls-2': 'wrls2',
-    "pars": "pars",
-    'wr-ls-3': 'wrls3',
-  }
-
-  
-  // (строка_начала, колонка_начала, количество_строк, количество_колонок)
-  let training_data = training_sheet.getRange(1, 1, training_last_row, training_last_col).getValues()
-  let exercises_data = exercises_sheet.getRange(2, 1, exercises_sheet.getLastRow(), exercises_sheet.getLastColumn()).getValues()
-  console.log(exercises_data)
-  let workoutsMap = {}
-
-  for(let i = 1; i < training_data.length; i++){
-    if(!workoutsMap[training_data[i][1]]){
-      workoutsMap[training_data[i][1]] = {
-        id: time_cong[training_data[i][1]],
-        name: training_data[i][1],
-        archived: false,
-        time: 0,
-        exercises: []
-      }
-    }
-
-    let photo = ''
-    for(let j = 0; j < exercises_data.length; j++){
-      if(exercises_data[j][2] === training_data[i][2]){
-        photo = exercises_data[j][4]
-        break;
-      } 
-    }
-
-    workoutsMap[training_data[i][1]].exercises.push({
-      id: i,
-      name: training_data[i][2],
-      reps: training_data[i][3],
-      weight: training_data[i][4],
-      time: Number(training_data[i][5]),
-      photo_small: photo,
-      photo_large: photo,
-    })
-
-    // + 20 это отдых для кадого подхода, пока что константа одна для всех упражнений
-    workoutsMap[training_data[i][1]].time += Number(training_data[i][5]) + 20
-
-  }
-
-  let groupedTrainings = Object.values(workoutsMap);
-  //let jsonString = JSON.stringify(groupedTrainings, null, 2);
-  //console.log(jsonString)
-
-  // Список истории тренировок, для расчета стрика
-  let workoutHistorySheet = ss.getSheetByName("workout_history");
-  let lastRow = workoutHistorySheet.getLastRow();
-  let rawDates = workoutHistorySheet.getRange(2, 2, lastRow - 1, 1).getValues();
-
-  let settest = get_settings_data()
-  console.log(`settest: ${settest}`)
-
-  return {
-    settings:{...settest},
-    analytics:{
-      currentStreak: calculateWorkoutStreak(rawDates), // Текущая серия подряд
-      maxStreak: findLongestStreak(rawDates), // максимальная серия за все время
-      heatmapMonths: calculateWorkoutHalfYear(rawDates), // данные для графика
-    },
-    workouts: groupedTrainings
-  }
-}
-
-// Список тренировок для клиента
-function get_data_from_server(){
-  // ВАЖНО АЙДИШНИКИ ДОЛЖНЫ БЫТЬ УНИКАЛЬНЫЕ!!!
-  return {
-    settings:{
-      prepSeconds: 20, // Количество секунд, перед тренировкой, этап подготовки
-      overtimeFactor: 0.2 // Мультипликатор для перетренерованности
-    },
-    workouts: [
-      {
-      id: "main",
-      name: "Основная",
-      archived: false,
-      time: 900,
-      exercises: [{
-        id: 1,
-        name: "Школьная разминка всего тела",
-        reps: 1,
-        weight: 0,
-        time: 180,
-        photo_small: "https://lh3.googleusercontent.com/d/1Dp2CSTM_cT1NwqJMmHrtBjFCGKdPRDp4",
-        photo_large: "https://lh3.googleusercontent.com/d/1Dp2CSTM_cT1NwqJMmHrtBjFCGKdPRDp4"},
-        {
-        id: 2,
-        name: "Приседания",
-        reps: 15,
-        weight: 0,
-        time: 30,
-        photo_small: "https://lh3.googleusercontent.com/d/1uifSlNPIF6gR-1X1j8Fu0v7SX3yDqmmJ",
-        photo_large: "https://lh3.googleusercontent.com/d/1uifSlNPIF6gR-1X1j8Fu0v7SX3yDqmmJ"},
-        {
-        id: 3,
-        name: "Приседания",
-        reps: 15,
-        weight: 10,
-        time: 30,
-        photo_small: "https://lh3.googleusercontent.com/d/1uifSlNPIF6gR-1X1j8Fu0v7SX3yDqmmJ",
-        photo_large: "https://lh3.googleusercontent.com/d/1uifSlNPIF6gR-1X1j8Fu0v7SX3yDqmmJ"},
-        {
-        id: 4,
-        name: "Классические подъёмы на носки стоя",
-        reps: 25,
-        weight: 0,
-        time: 25,
-        photo_small: "https://lh3.googleusercontent.com/d/1Vwm4yETb2U-vWpvtivQnMn1JzevJWa1x",
-        photo_large: "https://lh3.googleusercontent.com/d/1Vwm4yETb2U-vWpvtivQnMn1JzevJWa1x"},
-        {
-        id: 5,
-        name: "Классические подъёмы на носки стоя",
-        reps: 25,
-        weight: 10,
-        time: 25,
-        photo_small: "https://lh3.googleusercontent.com/d/1Vwm4yETb2U-vWpvtivQnMn1JzevJWa1x",
-        photo_large: "https://lh3.googleusercontent.com/d/1Vwm4yETb2U-vWpvtivQnMn1JzevJWa1x"},
-        {
-        id: 6,
-        name: "Планка на локтях (или лодочка)",
-        reps: 1,
-        weight: 0,
-        time: 30,
-        photo_small: "https://lh3.googleusercontent.com/d/1cjCQbqTffmPeA-uccWD7gBHwDlkUPa5i",
-        photo_large: "https://lh3.googleusercontent.com/d/1cjCQbqTffmPeA-uccWD7gBHwDlkUPa5i"},
-        {
-        id: 7,
-        name: "Стойка на руках у стены",
-        reps: 1,
-        weight: 0,
-        time: 30,
-        photo_small: "https://lh3.googleusercontent.com/d/1Xp7R_PkGiZwhIKwykRH1oc2VJ5pAn0Fz",
-        photo_large: "https://lh3.googleusercontent.com/d/1Xp7R_PkGiZwhIKwykRH1oc2VJ5pAn0Fz"},
-        {
-        id: 8,
-        name: "Pike Push-ups / Уголок",
-        reps: 10,
-        weight: 0,
-        time: 25,
-        photo_small: "https://lh3.googleusercontent.com/d/1_8oWZb73iMuLcaTZFVnbiC-wzkd5Gm3m",
-        photo_large: "https://lh3.googleusercontent.com/d/1_8oWZb73iMuLcaTZFVnbiC-wzkd5Gm3m"},
-        {
-        id: 9,
-        name: "Жим фитнес резинки стоя",
-        reps: 15,
-        weight: 15,
-        time: 30,
-        photo_small: "https://lh3.googleusercontent.com/d/1cjr34HxQhIuh2VUbaUqToQiKx8tpnDHU",
-        photo_large: "https://lh3.googleusercontent.com/d/1cjr34HxQhIuh2VUbaUqToQiKx8tpnDHU"},
-        {
-        id: 10,
-        name: "Жим фитнес резинки стоя",
-        reps: 15,
-        weight: 25,
-        time: 30,
-        photo_small: "https://lh3.googleusercontent.com/d/1cjr34HxQhIuh2VUbaUqToQiKx8tpnDHU",
-        photo_large: "https://lh3.googleusercontent.com/d/1cjr34HxQhIuh2VUbaUqToQiKx8tpnDHU"},
-        {
-        id: 11,
-        name: "Французский жим стоя с резинкой",
-        reps: 15,
-        weight: 15,
-        time: 30,
-        photo_small: "https://lh3.googleusercontent.com/d/1YraXc4W1o_CcSvLyDO5MBIKOsUyrII3H",
-        photo_large: "https://lh3.googleusercontent.com/d/1YraXc4W1o_CcSvLyDO5MBIKOsUyrII3H"},
-        {
-        id: 12,
-        name: "Трапеция с гантелями (Шраги)",
-        reps: 20,
-        weight: 20,
-        time: 30,
-        photo_small: "https://lh3.googleusercontent.com/d/1LkonQXZY-rTO1C6Zhy8EDTGjGPZzCUdX",
-        photo_large: "https://lh3.googleusercontent.com/d/1LkonQXZY-rTO1C6Zhy8EDTGjGPZzCUdX"}
-      ]
-      },
-      {
-        id: "dop",
-        name: "Дополнительная",
-        archived: false,
-        time: 50,
-        exercises: [{
-          id: 1,
-          name: "Планка на локтях (или лодочка)",
-          reps: 1,
-          weight: 0,
-          time: 30,
-          photo_small: "https://lh3.googleusercontent.com/d/1cjCQbqTffmPeA-uccWD7gBHwDlkUPa5i",
-          photo_large: "https://lh3.googleusercontent.com/d/1cjCQbqTffmPeA-uccWD7gBHwDlkUPa5i"
-        },{
-          id: 2,
-          name: "Стойка на руках у стены",
-          reps: 1,
-          weight: 0,
-          time: 30,
-          photo_small: "https://lh3.googleusercontent.com/d/1Xp7R_PkGiZwhIKwykRH1oc2VJ5pAn0Fz",
-          photo_large: "https://lh3.googleusercontent.com/d/1Xp7R_PkGiZwhIKwykRH1oc2VJ5pAn0Fz"
-        }]
-      },
-      {
-        name: "Еще",
-        id: "no",
-        archived: true,
-        time: 10,
-        exercises: [{
-          id: 1,
-          name: "Pike Push-ups / Уголок",
-          reps: 10,
-          weight: 0,
-          time: 25,
-          photo_small: "https://lh3.googleusercontent.com/d/1_8oWZb73iMuLcaTZFVnbiC-wzkd5Gm3m",
-          photo_large: "https://lh3.googleusercontent.com/d/1_8oWZb73iMuLcaTZFVnbiC-wzkd5Gm3m"
-        }]
-      }
-    ]
   }
 }
 
@@ -326,8 +93,7 @@ function seve_data_from_client(data){
   }
 }
 
-// Получить новый адишник для записи
-// На основе ссылки на лист и порядкового номера колонки
+// Получить новый адишник для записи, На основе ссылки на лист и порядкового номера колонки
 function getNextId(idColmn, sheet){
 
   // Номер строки до которой есть данные
